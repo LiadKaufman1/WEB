@@ -4,7 +4,12 @@ import useCatCongrats from "./useCatCongrats.jsx";
 import useCatUncongrats from "./useCatUncongrats.jsx";
 
 const DIV_STATE_KEY = "division_practice_state_v1";
+const API_BASE = "http://localhost:3000";
 
+/**
+ * Hebrew UI text (kid-facing).
+ * Developer comments are English only.
+ */
 const LEVEL_TEXT = {
   beginners: {
     title: "מתחילים 😺",
@@ -46,20 +51,55 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// ✅ מייצר תרגיל חילוק "נקי" בלי שברים:
-// בוחרים מחלק d, בוחרים תשובה ans, ואז מחולק a = d * ans
+/**
+ * Create a division question with an integer result (no remainder):
+ * Pick divisor (b) and answer (ans), then set a = b * ans.
+ */
 function makeQuestion(levelKey) {
-  const { minDivisor, maxDivisor, maxAnswer } = LEVELS[levelKey];
-  const b = randInt(minDivisor, maxDivisor); // מחלק
-  const ans = randInt(1, maxAnswer);         // תוצאה
-  const a = b * ans;                         // מחולק
+  const cfg = LEVELS[levelKey] ?? LEVELS.beginners;
+
+  const b = randInt(cfg.minDivisor, cfg.maxDivisor); // divisor
+  const ans = randInt(1, cfg.maxAnswer); // keep answer >= 1
+  const a = b * ans; // dividend
+
   return { a, b, ans };
+}
+
+/**
+ * Map division_f from DB to level key:
+ * 1 => beginners, 2 => advanced, 3+ => champs
+ */
+function levelFromDivisionF(division_f) {
+  const n = Number(division_f ?? 1);
+  if (!Number.isFinite(n) || n <= 1) return "beginners";
+  if (n === 2) return "advanced";
+  return "champs";
+}
+
+/**
+ * Fetch division_f for the current user.
+ * Expected API response:
+ * { ok: true, division_f: number }
+ */
+async function fetchDivisionF(username) {
+  try {
+    const res = await fetch(
+      `${API_BASE}/user/division-f?username=${encodeURIComponent(username)}`
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.ok) return null;
+
+    const n = Number(data.division_f);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
 }
 
 export default function PracticeDivision() {
   const navigate = useNavigate();
-
   const timerRef = useRef(null);
+
   const { triggerCatFx, CatCongrats } = useCatCongrats(900);
   const { triggerBadCatFx, CatUncongrats } = useCatUncongrats(900);
 
@@ -67,22 +107,30 @@ export default function PracticeDivision() {
   const [q, setQ] = useState(() => makeQuestion("beginners"));
   const [input, setInput] = useState("");
   const [msg, setMsg] = useState("");
-
-  const [scoreD, setScoreD] = useState(null);
-
-  // ✅ הסיפור שחוזר מ-CatStory
   const [story, setStory] = useState("");
+  const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
 
+  /**
+   * Persist practice state in sessionStorage so navigating to /cat-story
+   * does not reset the current exercise.
+   */
   function savePracticeState(next = {}) {
-    const payload = { level, q, input, msg, scoreD, ...next };
-    sessionStorage.setItem(DIV_STATE_KEY, JSON.stringify(payload));
+    sessionStorage.setItem(
+      DIV_STATE_KEY,
+      JSON.stringify({ level, q, input, msg, noPointsThisQuestion, ...next })
+    );
   }
 
+  /** Clear persisted practice state */
   function clearPracticeState() {
     sessionStorage.removeItem(DIV_STATE_KEY);
   }
 
-  // ✅ שחזור מצב תרגיל + שחזור סיפור (כשחוזרים מה-RAG)
+  /**
+   * On mount:
+   * 1) restore the practice state if it exists
+   * 2) restore the cat story if it exists
+   */
   useEffect(() => {
     const saved = sessionStorage.getItem(DIV_STATE_KEY);
     if (saved) {
@@ -92,8 +140,11 @@ export default function PracticeDivision() {
         if (st?.q) setQ(st.q);
         if (typeof st?.input === "string") setInput(st.input);
         if (typeof st?.msg === "string") setMsg(st.msg);
-        if (typeof st?.scoreD === "number") setScoreD(st.scoreD);
-      } catch {}
+        if (typeof st?.noPointsThisQuestion === "boolean")
+          setNoPointsThisQuestion(st.noPointsThisQuestion);
+      } catch {
+        // ignore
+      }
     }
 
     const s = sessionStorage.getItem("cat_story_text");
@@ -103,6 +154,34 @@ export default function PracticeDivision() {
     }
   }, []);
 
+  /**
+   * Auto-select difficulty level from division_f (DB).
+   * Important: if we have saved practice state, do NOT override it.
+   */
+  useEffect(() => {
+    (async () => {
+      if (sessionStorage.getItem(DIV_STATE_KEY)) return;
+
+      const username = localStorage.getItem("username");
+      if (!username) return;
+
+      const f = await fetchDivisionF(username);
+      const newLevel = levelFromDivisionF(f);
+
+      setLevel(newLevel);
+      setQ(makeQuestion(newLevel));
+      setInput("");
+      setMsg("");
+      setNoPointsThisQuestion(false);
+    })();
+  }, []);
+
+  /**
+   * Move to next question:
+   * - cancel pending timers
+   * - clear stored state and story
+   * - generate a new question
+   */
   function goNextQuestion(nextLevel = level) {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -115,77 +194,87 @@ export default function PracticeDivision() {
     sessionStorage.removeItem("cat_story_text");
     setMsg("");
     setInput("");
+    setNoPointsThisQuestion(false);
 
     setQ(makeQuestion(nextLevel));
   }
 
-  // ✅ מעבר ל-RAG על התרגיל הנוכחי
+  /**
+   * Navigate to the story screen for the current question.
+   * We mark this question as "no points" to prevent scoring after story.
+   */
   function goStory() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
 
-    savePracticeState();
+    setNoPointsThisQuestion(true);
+    savePracticeState({ noPointsThisQuestion: true });
 
-    // op: "÷" כדי שיופיע יפה בסיפור
-    navigate("/cat-story", { state: { a: q.a, b: q.b, op: "÷" } });
+    // Send op "/" so CatStory can narrate division.
+    navigate("/cat-story", { state: { a: q.a, b: q.b, op: "/" } });
   }
 
-  async function incDivisionScore() {
+  /**
+   * Optional scoring:
+   * Only increase score if user did NOT ask for a story.
+   * Keep this stub if you want points later; safe to leave unused.
+   */
+  async function incDivisionScoreIfAllowed() {
+    if (noPointsThisQuestion) return;
+
     const username = localStorage.getItem("username");
     if (!username) return;
 
     try {
-      const res = await fetch("http://localhost:3000/score/division", {
+      await fetch(`${API_BASE}/score/division`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username }),
       });
-
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.ok) {
-        if (typeof data.division === "number") {
-          setScoreD(data.division);
-          savePracticeState({ scoreD: data.division });
-        }
-      }
     } catch {
-      // שקט
+      // no UI interruption if server is down
     }
   }
 
+  /**
+   * Validate input and check answer.
+   * On correct answer: show success, trigger effects, optionally score, then auto-advance.
+   * On wrong answer: show error, trigger bad effects.
+   */
   function checkAnswer() {
     const val = Number(input);
+
     if (input.trim() === "" || !Number.isFinite(val)) {
-      setMsg("הקלד מספר");
-      savePracticeState({ msg: "הקלד מספר" });
+      const m = "הקלד מספר";
+      setMsg(m);
+      savePracticeState({ msg: m });
       return;
     }
 
     if (val === q.ans) {
-      setMsg("✅ נכון");
-      incDivisionScore();
+      const m = noPointsThisQuestion
+        ? "✅ נכון (בלי נקודות כי ביקשת סיפור)"
+        : "✅ נכון";
+      setMsg(m);
+      savePracticeState({ msg: m });
+
       triggerCatFx();
+      incDivisionScoreIfAllowed();
 
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        goNextQuestion(level);
-      }, 1000);
-
-      savePracticeState({ msg: "✅ נכון" });
-    } else {
-      triggerBadCatFx();
-      setMsg("❌ לא נכון");
-      savePracticeState({ msg: "❌ לא נכון" });
+      timerRef.current = setTimeout(() => goNextQuestion(level), 1000);
+      return;
     }
+
+    triggerBadCatFx();
+    const m = "❌ לא נכון";
+    setMsg(m);
+    savePracticeState({ msg: m });
   }
 
-  function changeLevel(newLevel) {
-    setLevel(newLevel);
-    goNextQuestion(newLevel);
-  }
-
+  /** Cleanup timer on unmount */
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -208,28 +297,19 @@ export default function PracticeDivision() {
 
       <h2>תרגול חילוק</h2>
 
-      <p style={{ marginTop: 6, color: "#334155", fontWeight: 700 }}>
-        ניקוד : {scoreD ?? "—"}
-      </p>
-
-      <label style={{ display: "block", marginBottom: 8, fontWeight: 700 }}>
-        רמת קושי
-      </label>
-
-      <select
-        value={level}
-        onChange={(e) => changeLevel(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
-      >
-        {Object.entries(LEVELS).map(([k, v]) => (
-          <option key={k} value={k}>
-            {v.label}
-          </option>
-        ))}
-      </select>
+      <div className="mt-2 rounded-2xl bg-white p-3 ring-1 ring-slate-200">
+        <div className="text-xs font-bold text-slate-600">הרמה שלך:</div>
+        <div className="text-sm font-extrabold text-slate-900">
+          {level === "beginners"
+            ? "מתחילים 😺"
+            : level === "advanced"
+            ? "מתקדמים 🐾"
+            : "אלופים 🐯"}
+        </div>
+      </div>
 
       <div style={{ fontSize: 28, fontWeight: 800, margin: "16px 0" }}>
-        ?= {q.b} ÷ {q.a}
+        ?= {q.a} ÷ {q.b}
       </div>
 
       <input
@@ -290,7 +370,7 @@ export default function PracticeDivision() {
         </div>
 
         <p className="mt-2 text-sm leading-7 text-slate-700 whitespace-pre-line">
-          {LEVEL_TEXT[level]?.body ?? "בחר רמה כדי לראות הסבר."}
+          {LEVEL_TEXT[level]?.body ?? ""}
         </p>
       </div>
 

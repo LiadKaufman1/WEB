@@ -11,18 +11,19 @@ export default function AboutMathBuddy() {
             {/* Text */}
             <div className="md:flex-1">
               <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-700">
-                🐾 אתר ללימוד חשבון לגילאי 6–9
+                🐾 אתר ללימוד חשבון לגילאי 6–12
               </div>
 
               <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-                ברוכים הבאים לעולם החשבון עם{" "}
+                לומדים חשבון עם{" "}
                 <span className="text-rose-600">מתי החתול</span> 😺
               </h1>
 
               <p className="mt-3 text-base leading-7 text-slate-700 md:text-lg">
-                כאן לומדים חיבור, חיסור, כפל, חילוק ואפילו אחוזים — בצורה
-                פשוטה, משחקית ומעודדת. הילדים מתקדמים בקצב שלהם, מקבלים חיזוקים
-                חיוביים, וצוברים ביטחון דרך תרגול קצר וכיפי.
+                זה אתר שעוזר לילדים ללמוד חשבון בצורה כיפית, קצרה וברורה — עם
+                בינה מלאכותית שמלווה אותם דרך <b>מתי החתול</b>. המערכת בודקת איך
+                הילד מתקדם, ואז <b>מתאימה את הרמה</b>: אם קל מדי היא מאתגרת יותר,
+                ואם קשה מדי היא מסבירה ומפשטת כדי לבנות ביטחון.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2">
@@ -33,18 +34,12 @@ export default function AboutMathBuddy() {
                 <Chip>📊 אחוזים</Chip>
               </div>
 
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-6">
                 <a
                   href="/"
                   className="inline-flex items-center justify-center rounded-2xl bg-rose-600 px-5 py-3 font-bold text-white shadow-sm hover:bg-rose-700"
                 >
                   להתחיל לתרגל 🚀
-                </a>
-                <a
-                  href="/about"
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 font-bold text-slate-800 hover:bg-slate-50"
-                >
-                  איך זה עובד?
                 </a>
               </div>
             </div>
@@ -55,7 +50,7 @@ export default function AboutMathBuddy() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-rose-700">
-                      חבר הלמידה שלך
+                      הבינה המלאכותית שמלווה אותך
                     </div>
                     <div className="mt-1 text-2xl font-extrabold text-slate-900">
                       מתי החתול 😺
@@ -67,13 +62,13 @@ export default function AboutMathBuddy() {
                 </div>
 
                 <div className="mt-4 rounded-2xl bg-white/80 p-4 text-center text-sm font-semibold text-slate-700">
-                  “אם טועים — זה בסדר! ככה לומדים ומתקדמים.” 😸
+                  “אני מתאים לך את הרמה — כדי שתתקדם בלי לחץ!” 😸
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <MiniStat label="תרגול קצר" value="5 דק׳" />
-                  <MiniStat label="חיזוקים" value="כל הצלחה" />
-                  <MiniStat label="קצב אישי" value="לכל ילד" />
+                  <MiniStat label="AI מלווה" value="בכל שאלה" />
+                  <MiniStat label="רמה משתנה" value="לפי התקדמות" />
                   <MiniStat label="כיף" value="ממש!" />
                 </div>
               </div>
@@ -89,11 +84,11 @@ export default function AboutMathBuddy() {
             title="✨ למה זה עוזר לילדים?"
             icon="🧠"
             items={[
-              "דמות קבועה (מתי החתול) יוצרת ביטחון וליווי.",
+              "מתי החתול מלווה את הילד ומסביר בצורה ידידותית.",
+              "המערכת מתאימה את הקושי לפי ההתקדמות (לא קל מדי ולא קשה מדי).",
               "תרגול משחקי שומר על עניין וריכוז לאורך זמן.",
-              "התקדמות אישית בלי לחץ — כל ילד בקצב שלו.",
               "חיזוקים חיוביים אחרי הצלחות מעלים מוטיבציה.",
-              "הסברים פשוטים וברורים שמתאימים לגיל 6–9.",
+              "הסברים פשוטים שמתאימים לגילאי 6–12.",
             ]}
           />
 
@@ -122,18 +117,18 @@ export default function AboutMathBuddy() {
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <Step
               n="1"
-              title="בוחרים נושא"
-              body="חיבור / חיסור / כפל / חילוק / אחוזים — לפי מה שמתאים לילד."
+              title="עונים על שאלות"
+              body="בוחרים נושא (חיבור/חיסור/כפל/חילוק/אחוזים) ומתחילים."
             />
             <Step
               n="2"
-              title="מתרגלים קצת כל יום"
-              body="כמה דקות ביום מספיקות כדי לבנות שגרה ולחזק הבנה."
+              title="מתי החתול עוזר"
+              body="אם טעית — מתי מסביר ומדגים. אם הצלחת — הוא מאתגר קצת יותר."
             />
             <Step
               n="3"
-              title="צוברים פרסים והישגים"
-              body="כל הצלחה נותנת חיזוק — וזה גורם לילדים לרצות להמשיך."
+              title="הרמה משתנה לבד"
+              body="המערכת לומדת איך הילד מתקדם ומכוונת את הקושי בהתאם."
             />
           </div>
         </section>
@@ -144,8 +139,8 @@ export default function AboutMathBuddy() {
             😺 מתי החתול אומר:
           </h3>
           <p className="mt-2 text-base leading-7 text-slate-800">
-            “בחשבון לא חייבים להיות מושלמים — חייבים להתאמן. כל תרגול קטן עושה
-            אותך חזקים יותר!” 💪
+            “לא חייבים להיות מושלמים — חייבים להתאמן. ואני אדאג שהרמה תהיה בדיוק
+            מה שמתאים לך!” 💪
           </p>
         </section>
       </main>

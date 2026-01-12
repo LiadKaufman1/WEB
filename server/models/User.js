@@ -19,6 +19,9 @@ const UserSchema = new mongoose.Schema({
 
   percent: { type: Number, default: 1 },
   percent_f: { type: Number, default: 1 },
+
+  age: { type: Number, required: true, min: 1, max: 12 },
+
 });
 
 // יצירת מודל

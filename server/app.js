@@ -12,8 +12,7 @@ app.use((req, res, next) => {
   console.log(req.method, req.url, req.body);
   next();
 });
-// ✅ שים פה את הסיסמה החדשה האמיתית
-// טיפ: לפרויקט לימודי עדיף סיסמה רק אותיות+מספרים (בלי @ # % וכו')
+
 const MONGO_URI =
   "mongodb+srv://mongoUser:mati1@cluster0.wxwcukg.mongodb.net/MorDB?retryWrites=true&w=majority";
 
@@ -56,7 +55,6 @@ app.post("/user/stats", async (req, res) => {
 });
 
 
-// ✅ אמצעי הגנה: לא מריצים שאילתות אם אין חיבור
 function ensureDb(req, res) {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ error: "DB not connected" });
@@ -64,7 +62,7 @@ function ensureDb(req, res) {
   return null;
 }
 
-// בדיקת התחברות
+// login check
 app.post("/check-login", async (req, res) => {
   try {
     const gate = ensureDb(req, res);
@@ -107,19 +105,32 @@ app.post("/user/stats", async (req, res) => {
   }
 });
 
-// רישום משתמש
+// register
 app.post("/register", async (req, res) => {
   try {
     const gate = ensureDb(req, res);
     if (gate) return;
 
-    const { username, password } = req.body || {};
+    // ✅ age
+    const { username, password, age } = req.body || {};
 
-    if (!username || !password) {
-      return res.status(400).json({ success: false, error: "חסר שם משתמש או סיסמה" });
+    if (!username || !password || age === undefined) {
+      return res.status(400).json({ success: false, error: "חסר שם משתמש / סיסמה / גיל" });
     }
 
-    const user = await User.create({ username, password });
+    const ageNum = Number(age);
+    if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 12) {
+      return res.status(400).json({ success: false, error: "גיל חייב להיות בין 1 ל-12" });
+    }
+
+    const exists = await User.findOne({ username });
+    if (exists) {
+      return res.status(409).json({ success: false, error: "שם משתמש כבר קיים" });
+    }
+
+    // ✅ save age
+    const user = await User.create({ username, password, age: ageNum });
+
     return res.json({ success: true, id: user._id });
   } catch (err) {
     return res.status(400).json({ success: false, error: err.message });
@@ -138,7 +149,7 @@ app.post("/score/addition", async (req, res) => {
       return res.status(400).json({ ok: false, error: "NO_USERNAME" });
     }
 
-    console.log("INC FIELD:", "addition"); // ✅ כאן (לא חובה, רק לבדיקה)
+    console.log("INC FIELD:", "addition"); // ✅
 
     const user = await User.findOneAndUpdate(
       { username },
@@ -146,7 +157,7 @@ app.post("/score/addition", async (req, res) => {
       { new: true, projection: { password: 0 } }
     );
 
-    console.log("UPDATED USER:", user); // ✅ גם זה עוזר מאוד
+    console.log("UPDATED USER:", user); // ✅ 
 
     if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
 
@@ -154,6 +165,56 @@ app.post("/score/addition", async (req, res) => {
   } catch (e) {
     console.log("ERR:", e);
     res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
+
+
+// GET /user/addition-f?username=...
+app.get("/user/addition-f", async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+
+    const user = await User.findOne({ username }, { password: 0 });
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+
+    return res.json({ ok: true, addition_f: user.addition_f ?? 1 });
+  } catch (e) {
+    console.log("ERR:", e);
+    return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
+
+
+// GET /user/subtraction?username=...
+app.get("/user/subtraction-f", async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+
+    const user = await User.findOne({ username }, { password: 0 });
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+
+    return res.json({ ok: true, subtraction_f: user.subtraction_f ?? 1 });
+  } catch (e) {
+    console.log("ERR:", e);
+    return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
+
+// GET /user/multiplication-f?username=...
+app.get("/user/multiplication-f", async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+
+    const user = await User.findOne({ username }, { password: 0 });
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+
+    return res.json({ ok: true, multiplication_f: user.multiplication_f ?? 1 });
+  } catch (e) {
+    console.log("ERR:", e);
+    return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
   }
 });
 
@@ -175,6 +236,22 @@ app.post("/score/multiplication", async (req, res) => {
       { $inc: { multiplication: 1 } },
       { new: true, projection: { password: 0 } }
     );
+
+// GET /user/division-f?username=...
+app.get("/user/division-f", async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+
+    const user = await User.findOne({ username }, { password: 0 });
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+
+    return res.json({ ok: true, division_f: user.division_f ?? 1 });
+  } catch (e) {
+    console.log("ERR:", e);
+    return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
 
     console.log("UPDATED USER:", user); // ✅ גם זה עוזר מאוד
 
@@ -252,7 +329,39 @@ app.post("/score/division", async (req, res) => {
   }
 });
 
-// 🔹 החזרת סטטיסטיקות משתמש (לדף הבית)
+app.post("/score/percent", async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+
+    const user = await User.findOneAndUpdate(
+      { username },
+      { $inc: { percent: 1 } },
+      { new: true, projection: { password: 0 } }
+    );
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+
+    res.json({ ok: true, percent: user.percent });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
+
+app.get("/user/percent-f", async (req, res) => {
+  try {
+    const username = String(req.query.username || "").trim();
+    if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+
+    const user = await User.findOne({ username }, { percent_f: 1 });
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+
+    res.json({ ok: true, percent_f: Number(user.percent_f || 1) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
+
+// 🔹 return stetistics
 app.post("/user/stats", async (req, res) => {
   try {
     const { username } = req.body;

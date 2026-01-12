@@ -1,9 +1,17 @@
+// src/pages/PracticeAddition.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
 
 const ADD_STATE_KEY = "addition_practice_state_v1";
+const API_BASE = "http://localhost:3000";
+
+const LEVELS = {
+  easy: { label: "מתחילים (0–10)", min: 0, max: 10 },
+  medium: { label: "מתקדמים (0–50)", min: 0, max: 50 },
+  hard: { label: "אלופים (0–200)", min: 0, max: 200 },
+};
 
 const LEVEL_TEXT = {
   easy: {
@@ -38,27 +46,56 @@ const LEVEL_TEXT = {
   },
 };
 
-const LEVELS = {
-  easy: { label: "קל (0–10)", min: 0, max: 10 },
-  medium: { label: "בינוני (0–50)", min: 0, max: 50 },
-  hard: { label: "קשה (0–200)", min: 0, max: 200 },
-};
-
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * Create an addition question for the given level.
+ */
+
 function makeQuestion(levelKey) {
-  const { min, max } = LEVELS[levelKey];
+  const { min, max } = LEVELS[levelKey] ?? LEVELS.easy;
   const a = randInt(min, max);
   const b = randInt(min, max);
   return { a, b, ans: a + b };
 }
 
+/**
+ * Map addition_f from DB to level key:
+ * 1 => easy, 2 => medium, 3+ => hard
+ */
+
+function levelFromAdditionF(addition_f) {
+  const n = Number(addition_f ?? 1);
+  if (!Number.isFinite(n) || n <= 1) return "easy";
+  if (n === 2) return "medium";
+  return "hard";
+}
+
+/**
+ * Fetch addition_f for the current user.
+ * Expected API response:
+ * { ok: true, addition_f: number }
+ */
+async function fetchAdditionF(username) {
+  try {
+    const res = await fetch(
+      `${API_BASE}/user/addition-f?username=${encodeURIComponent(username)}`
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.ok) return null;
+    const n = Number(data.addition_f);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function PracticeAddition() {
   const navigate = useNavigate();
-
   const timerRef = useRef(null);
+
   const { triggerCatFx, CatCongrats } = useCatCongrats(900);
   const { triggerBadCatFx, CatUncongrats } = useCatUncongrats(900);
 
@@ -66,30 +103,30 @@ export default function PracticeAddition() {
   const [q, setQ] = useState(() => makeQuestion("easy"));
   const [input, setInput] = useState("");
   const [msg, setMsg] = useState("");
-
-  const [scoreA, setScoreA] = useState(null);
-
-  // ✅ הסיפור שחוזר מ-CatStory
   const [story, setStory] = useState("");
+  const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
 
-  // ✅ שמירת מצב התרגיל (כדי שלא יתאפס כשעוברים ל-RAG וחוזרים)
+  /**
+   * Persist practice state in sessionStorage so navigating to /cat-story
+   * does not reset the current exercise.
+   */
   function savePracticeState(next = {}) {
-    const payload = {
-      level,
-      q,
-      input,
-      msg,
-      scoreA,
-      ...next,
-    };
-    sessionStorage.setItem(ADD_STATE_KEY, JSON.stringify(payload));
+    sessionStorage.setItem(
+      ADD_STATE_KEY,
+      JSON.stringify({ level, q, input, msg, noPointsThisQuestion, ...next })
+    );
   }
 
+  /** Clear persisted practice state */
   function clearPracticeState() {
     sessionStorage.removeItem(ADD_STATE_KEY);
   }
 
-  // ✅ שחזור מצב תרגיל + שחזור סיפור כשחוזרים מה-RAG
+  /**
+   * On mount:
+   * 1) restore the practice state if it exists
+   * 2) restore the cat story if it exists
+   */
   useEffect(() => {
     const saved = sessionStorage.getItem(ADD_STATE_KEY);
     if (saved) {
@@ -99,7 +136,8 @@ export default function PracticeAddition() {
         if (st?.q) setQ(st.q);
         if (typeof st?.input === "string") setInput(st.input);
         if (typeof st?.msg === "string") setMsg(st.msg);
-        if (typeof st?.scoreA === "number") setScoreA(st.scoreA);
+        if (typeof st?.noPointsThisQuestion === "boolean")
+          setNoPointsThisQuestion(st.noPointsThisQuestion);
       } catch {
         // ignore
       }
@@ -112,102 +150,122 @@ export default function PracticeAddition() {
     }
   }, []);
 
-  // ✅ פונקציה אחת שמייצרת “תרגיל הבא” + מנקה את הישן
+  /**
+   * Auto-select difficulty level from addition_f (DB).
+   * Important: if we have saved practice state, do NOT override it.
+   */
+  useEffect(() => {
+    (async () => {
+      if (sessionStorage.getItem(ADD_STATE_KEY)) return;
+
+      const username = localStorage.getItem("username");
+      if (!username) return;
+
+      const f = await fetchAdditionF(username);
+      const newLevel = levelFromAdditionF(f);
+
+      setLevel(newLevel);
+      setQ(makeQuestion(newLevel));
+      setInput("");
+      setMsg("");
+      setNoPointsThisQuestion(false);
+    })();
+  }, []);
+
+  /**
+   * Move to next question:
+   * - cancel pending timers
+   * - clear stored state and story
+   * - generate a new question
+   */
   function goNextQuestion(nextLevel = level) {
-    // מנקים טיימר קודם אם קיים
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-
-    // ✅ זה סט חדש, אז לא צריך לשמר מצב ישן
     clearPracticeState();
-
-    // ✅ מנקים דברים שקשורים לתרגיל הקודם
     setStory("");
     sessionStorage.removeItem("cat_story_text");
     setMsg("");
     setInput("");
-
-    // ✅ מייצרים שאלה חדשה
+    setNoPointsThisQuestion(false);
     setQ(makeQuestion(nextLevel));
   }
 
-  // ✅ שולח את המספרים לדף הסיפור (RAG)
+  /**
+   * Navigate to the story screen for the current question.
+   * We mark this question as "no points" to prevent scoring after story.
+   */
   function goStory() {
-    // ✅ שלא יחליף שאלה בזמן שאנחנו עוברים לסיפור
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
 
-    // ✅ שמירת מצב כדי שכשתחזור - אותו תרגיל יישאר
-    savePracticeState();
+    setNoPointsThisQuestion(true);
+    savePracticeState({ noPointsThisQuestion: true });
 
     navigate("/cat-story", { state: { a: q.a, b: q.b, op: "+" } });
   }
 
-  // ✅ מעלה score
-  async function incAdditionScore() {
+  /**
+   * Optional scoring:
+   * Only increase score if user did NOT ask for a story.
+   */
+  async function incAdditionScoreIfAllowed() {
+    if (noPointsThisQuestion) return;
+
     const username = localStorage.getItem("username");
     if (!username) return;
 
     try {
-      const res = await fetch("http://localhost:3000/score/addition", {
+      await fetch(`${API_BASE}/score/addition`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username }),
       });
-
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.ok) {
-        if (typeof data.addition === "number") {
-          setScoreA(data.addition);
-          // ✅ נשמור גם את הניקוד כדי שלא יתאפס אם הולכים ל-RAG
-          savePracticeState({ scoreA: data.addition });
-        }
-      }
     } catch {
-      // לא מפריעים לילד אם השרת לא זמין
+      // no UI interruption if server is down
     }
   }
 
+  /**
+   * Validate input and check answer.
+   * On correct answer: show success, trigger effects, optionally score, then auto-advance.
+   * On wrong answer: show error, trigger bad effects.
+   */
   function checkAnswer() {
     const val = Number(input);
+
     if (input.trim() === "" || !Number.isFinite(val)) {
-      setMsg("הקלד מספר");
-      // ✅ נשמור מצב עדכני
-      savePracticeState({ msg: "הקלד מספר" });
+      const m = "הקלד מספר";
+      setMsg(m);
+      savePracticeState({ msg: m });
       return;
     }
 
     if (val === q.ans) {
-      setMsg("✅ נכון");
-      incAdditionScore();
+      const m = noPointsThisQuestion
+        ? "✅ נכון (בלי נקודות כי ביקשת סיפור)"
+        : "✅ נכון";
+      setMsg(m);
+      savePracticeState({ msg: m });
+
       triggerCatFx();
+      incAdditionScoreIfAllowed();
 
-      // ✅ אחרי שנייה עוברים לתרגיל הבא ומנקים את הישן
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        goNextQuestion(level);
-      }, 1000);
-
-      // ✅ נשמור את זה (למקרה שהולכים ל-RAG מיד)
-      savePracticeState({ msg: "✅ נכון" });
-    } else {
-      triggerBadCatFx();
-      setMsg("❌ לא נכון");
-      savePracticeState({ msg: "❌ לא נכון" });
+      timerRef.current = setTimeout(() => goNextQuestion(level), 1000);
+      return;
     }
+
+    triggerBadCatFx();
+    const m = "❌ לא נכון";
+    setMsg(m);
+    savePracticeState({ msg: m });
   }
 
-  function changeLevel(newLevel) {
-    setLevel(newLevel);
-    // ✅ גם כאן: כשמחליפים רמה, זה “סט חדש” => מנקים תרגיל קודם + סיפור קודם
-    goNextQuestion(newLevel);
-  }
-
-  // ✅ לנקות טיימר ביציאה מהקומפוננטה
+  /** Cleanup timer on unmount */
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -230,35 +288,26 @@ export default function PracticeAddition() {
 
       <h2>תרגול חיבור</h2>
 
-      <p style={{ marginTop: 6, color: "#334155", fontWeight: 700 }}>
-        ניקוד : {scoreA ?? "—"}
-      </p>
+      <div className="mt-2 rounded-2xl bg-white p-3 ring-1 ring-slate-200">
+        <div className="text-xs font-bold text-slate-600">הרמה שלך:</div>
+        <div className="text-sm font-extrabold text-slate-900">
+          {level === "easy"
+            ? "מתחילים 😺"
+            : level === "medium"
+            ? "מתקדמים 🐾"
+            : "אלופים 🐯"}
+        </div>
+      </div>
 
-      <label style={{ display: "block", marginBottom: 8, fontWeight: 700 }}>
-        רמת קושי
-      </label>
-
-      <select
-        value={level}
-        onChange={(e) => changeLevel(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
-      >
-        {Object.entries(LEVELS).map(([k, v]) => (
-          <option key={k} value={k}>
-            {v.label}
-          </option>
-        ))}
-      </select>
-
+      {/* Correct display: a + b = ? */}
       <div style={{ fontSize: 28, fontWeight: 800, margin: "16px 0" }}>
-        ?= {q.a} + {q.b}
+      =-.,mnbvcxz{q.b} + {q.a} 
       </div>
 
       <input
         value={input}
         onChange={(e) => {
           setInput(e.target.value);
-          // ✅ שומרים בזמן הקלדה, כדי שאם הולכים ל-RAG לא נאבד
           savePracticeState({ input: e.target.value });
         }}
         placeholder="תשובה"
@@ -281,7 +330,6 @@ export default function PracticeAddition() {
           ספר סיפור 😺
         </button>
 
-        {/* ✅ כפתור ידני לתרגיל הבא (מוחק סיפור/הודעות של הקודם) */}
         <button
           onClick={() => goNextQuestion(level)}
           style={{
@@ -297,14 +345,12 @@ export default function PracticeAddition() {
         </button>
       </div>
 
-      {/* הודעה נכון/לא נכון */}
       {msg ? (
         <div style={{ marginTop: 10, fontWeight: 800, color: "#0f172a" }}>
           {msg}
         </div>
       ) : null}
 
-      {/* טקסט הסבר לרמה */}
       <div className="mt-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-extrabold text-slate-900">
@@ -316,11 +362,10 @@ export default function PracticeAddition() {
         </div>
 
         <p className="mt-2 text-sm leading-7 text-slate-700 whitespace-pre-line">
-          {LEVEL_TEXT[level]?.body ?? "בחר רמה כדי לראות הסבר."}
+          {LEVEL_TEXT[level]?.body ?? ""}
         </p>
       </div>
 
-      {/* ✅ הסיפור שחזר */}
       {story ? (
         <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
           <div className="text-sm font-extrabold text-slate-900">

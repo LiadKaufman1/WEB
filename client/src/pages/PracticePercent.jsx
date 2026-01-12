@@ -1,138 +1,158 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
 
-const MULT_STATE_KEY = "multiplication_practice_state_v1";
+const PERCENT_STATE_KEY = "percent_practice_state_v1";
 const API_BASE = "http://localhost:3000";
 
-/**
- * Hebrew UI text stays Hebrew (kid-facing).
- * Code explanations/comments are in English (developer-facing).
- */
-const LEVEL_TEXT = {
-  beginners: {
-    title: "מתחילים 😺",
-    body:
-      "מתי החתול מסביר שכפל זה חיבור שחוזר על עצמו.\n" +
-      "בוחרים מספר אחד.\n" +
-      "מחברים אותו שוב ושוב.\n" +
-      "דוגמה: 3 × 2 זה כמו 3 + 3.\n" +
-      "אפשר לצייר עיגולים או להשתמש באצבעות.\n" +
-      "טיפ של מתי: לאט וברור זה הכי טוב 😸",
-  },
-  advanced: {
-    title: "מתקדמים 🐾",
-    body:
-      "מתי החתול כבר יודע לחשב מהר יותר.\n" +
-      "משתמשים בלוח הכפל.\n" +
-      "זוכרים תרגילים מוכרים.\n" +
-      "אם קשה — מפרקים לחלקים.\n" +
-      "דוגמה: 6 × 7 → קודם 6 × 5 ואז 6 × 2.\n" +
-      "מחברים את התוצאות.\n" +
-      "טיפ של מתי: לפרק עושה את זה קל 🐾",
-  },
-  champs: {
-    title: "אלופים 🐯",
-    body:
-      "זו רמה של אלופים אמיתיים.\n" +
-      "מתי החתול כבר מכיר את לוח הכפל טוב.\n" +
-      "אפשר להשתמש בטריקים חכמים.\n" +
-      "בודקים אם התשובה הגיונית.\n" +
-      "דוגמה: 9 × 12 → 10 × 12 ואז מורידים 12.\n" +
-      "מהיר וחכם.\n" +
-      "טיפ של מתי: לחשוב רגע חוסך טעויות 🧠",
-  },
+const LEVELS = {
+  easy: { label: "מתחילים (קל מאוד)", minBase: 10, maxBase: 200 },
+  medium: { label: "מתקדמים (קל)", minBase: 10, maxBase: 400 },
+  hard: { label: "אלופים (עדיין לילדים)", minBase: 10, maxBase: 600 },
 };
 
-const LEVELS = {
-  beginners: { label: "מתחילים", min: 0, max: 5 },
-  advanced: { label: "מתקדמים", min: 0, max: 10 },
-  champs: { label: "אלופים", min: 0, max: 12 },
+const LEVEL_TEXT = {
+  easy: {
+    title: "אחוזים למתחילים 😺",
+    body:
+      "אחוזים זה 'כמה מתוך 100'.\n" +
+      "חישובים סופר קלים:\n" +
+      "50% = חצי, 25% = רבע, 10% = לחלק ב־10.\n" +
+      "דוגמה: 25% מ־80 = 20.\n" +
+      "טיפ של מתי: קודם עושים 10/25/50 ואז ממשיכים 🐾",
+  },
+  medium: {
+    title: "אחוזים מתקדמים 🐾",
+    body:
+      "עכשיו מוסיפים עוד אחוזים קלים.\n" +
+      "5% זה חצי של 10%.\n" +
+      "20% זה כפול מ־10%.\n" +
+      "דוגמה: 15% מ־200 = 10% (20) + 5% (10) = 30.\n" +
+      "טיפ של מתי: תחשוב בחתיכות קטנות 😺",
+  },
+  hard: {
+    title: "אחוזים לאלופים 🐯",
+    body:
+      "פה עושים אחוזים קצת יותר 'חכמים', אבל עדיין פשוטים.\n" +
+      "1% = לחלק ב־100.\n" +
+      "2% = פעמיים 1%.\n" +
+      "4% = כפול 2%.\n" +
+      "דוגמה: 4% מ־200 = 8.\n" +
+      "טיפ של מתי: תמיד אפשר לפרק אחוזים לחלקים 🧱",
+  },
 };
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
-/**
- * Create a multiplication question for the chosen level.
- * We keep values small for kid-friendly practice.
- */
-function makeQuestion(levelKey) {
-  const { min, max } = LEVELS[levelKey] ?? LEVELS.beginners;
-  const a = randInt(min, max);
-  const b = randInt(min, max);
-  return { a, b, ans: a * b };
+function randChoice(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 /**
- * Map multiplication_f from DB to level key:
- * 1 => beginners, 2 => advanced, 3+ => champs
+ * 1 => easy, 2 => medium, 3+ => hard
  */
-function levelFromMultiplicationF(multiplication_f) {
-  const n = Number(multiplication_f ?? 1);
-  if (!Number.isFinite(n) || n <= 1) return "beginners";
-  if (n === 2) return "advanced";
-  return "champs";
+function levelFromPercentF(percent_f) {
+  const n = Number(percent_f ?? 1);
+  if (!Number.isFinite(n) || n <= 1) return "easy";
+  if (n === 2) return "medium";
+  return "hard";
 }
 
 /**
- * Fetch multiplication_f for the current user.
- * Expected API response:
- * { ok: true, multiplication_f: number }
+ * GET /user/percent-f?username=...
+ * returns: { ok:true, percent_f:number }
  */
-async function fetchMultiplicationF(username) {
+async function fetchPercentF(username) {
   try {
     const res = await fetch(
-      `${API_BASE}/user/multiplication-f?username=${encodeURIComponent(username)}`
+      `${API_BASE}/user/percent-f?username=${encodeURIComponent(username)}`
     );
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data?.ok) return null;
-    const n = Number(data.multiplication_f);
+    const n = Number(data.percent_f);
     return Number.isFinite(n) ? n : null;
   } catch {
     return null;
   }
 }
 
-export default function PracticeMultiplication() {
+/**
+ * Generate kid-friendly percent question with integer answer.
+ * We pick percent "p" based on level.
+ * Then we create base as (answer * 100) / p so the answer is always whole.
+ */
+function makeQuestion(levelKey) {
+  const lvl = levelKey || "easy";
+
+  const PERCENTS_BY_LEVEL = {
+    easy: [10, 25, 50],
+    medium: [5, 10, 20, 25, 50],
+    hard: [1, 2, 4, 5, 10, 20, 25, 50],
+  };
+
+  const p = randChoice(PERCENTS_BY_LEVEL[lvl] || PERCENTS_BY_LEVEL.easy);
+
+  // Choose an answer (result) range per level (keep small)
+  const ansRanges = {
+    easy: { min: 1, max: 20 },
+    medium: { min: 1, max: 40 },
+    hard: { min: 1, max: 60 },
+  };
+  const { min, max } = ansRanges[lvl] || ansRanges.easy;
+  const ans = randInt(min, max);
+
+  // base must be integer: base = ans*100 / p
+  let base = (ans * 100) / p;
+
+  // Ensure base is integer (it should be given our percent set)
+  // But just in case, retry a few times.
+  let tries = 0;
+  while (!Number.isInteger(base) && tries < 20) {
+    const ans2 = randInt(min, max);
+    base = (ans2 * 100) / p;
+    tries++;
+  }
+
+  // Keep base not too huge (kid-friendly). If too big, reduce answer.
+  if (base > 600) {
+    const ansSmall = Math.max(1, Math.floor((600 * p) / 100));
+    base = (ansSmall * 100) / p;
+    return { p, base, ans: ansSmall };
+  }
+
+  return { p, base, ans };
+}
+
+export default function PracticePercent() {
   const navigate = useNavigate();
   const timerRef = useRef(null);
 
   const { triggerCatFx, CatCongrats } = useCatCongrats(900);
   const { triggerBadCatFx, CatUncongrats } = useCatUncongrats(900);
 
-  const [level, setLevel] = useState("beginners");
-  const [q, setQ] = useState(() => makeQuestion("beginners"));
+  const [level, setLevel] = useState("easy");
+  const [q, setQ] = useState(() => makeQuestion("easy"));
   const [input, setInput] = useState("");
   const [msg, setMsg] = useState("");
   const [story, setStory] = useState("");
   const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
 
-  /**
-   * Persist practice state in sessionStorage so navigating to /cat-story
-   * does not reset the current exercise.
-   */
   function savePracticeState(next = {}) {
     sessionStorage.setItem(
-      MULT_STATE_KEY,
+      PERCENT_STATE_KEY,
       JSON.stringify({ level, q, input, msg, noPointsThisQuestion, ...next })
     );
   }
 
-  /** Clear persisted practice state */
   function clearPracticeState() {
-    sessionStorage.removeItem(MULT_STATE_KEY);
+    sessionStorage.removeItem(PERCENT_STATE_KEY);
   }
 
-  /**
-   * On mount:
-   * 1) restore the practice state if it exists
-   * 2) restore the cat story if it exists
-   */
+  // Restore state + story on mount
   useEffect(() => {
-    const saved = sessionStorage.getItem(MULT_STATE_KEY);
+    const saved = sessionStorage.getItem(PERCENT_STATE_KEY);
     if (saved) {
       try {
         const st = JSON.parse(saved);
@@ -154,19 +174,16 @@ export default function PracticeMultiplication() {
     }
   }, []);
 
-  /**
-   * Auto-select difficulty level from multiplication_f (DB).
-   * Important: if we have saved practice state, do NOT override it.
-   */
+  // Auto-level from percent_f (do not override if saved state exists)
   useEffect(() => {
     (async () => {
-      if (sessionStorage.getItem(MULT_STATE_KEY)) return;
+      if (sessionStorage.getItem(PERCENT_STATE_KEY)) return;
 
       const username = localStorage.getItem("username");
       if (!username) return;
 
-      const f = await fetchMultiplicationF(username);
-      const newLevel = levelFromMultiplicationF(f);
+      const f = await fetchPercentF(username);
+      const newLevel = levelFromPercentF(f);
 
       setLevel(newLevel);
       setQ(makeQuestion(newLevel));
@@ -176,12 +193,6 @@ export default function PracticeMultiplication() {
     })();
   }, []);
 
-  /**
-   * Move to next question:
-   * - cancel pending timers
-   * - clear stored state and story
-   * - generate a new question
-   */
   function goNextQuestion(nextLevel = level) {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -196,51 +207,35 @@ export default function PracticeMultiplication() {
     setQ(makeQuestion(nextLevel));
   }
 
-  /**
-   * Navigate to the story screen for the current question.
-   * We mark this question as "no points" to prevent scoring after story.
-   */
   function goStory() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-
     setNoPointsThisQuestion(true);
     savePracticeState({ noPointsThisQuestion: true });
 
-    // Use a string op so CatStory can decide how to narrate.
-    // If your CatStory expects "*", keep "*". If it expects "×", change it there.
-    navigate("/cat-story", { state: { a: q.a, b: q.b, op: "*" } });
+    // Story screen should know it's percent question
+    navigate("/cat-story", { state: { p: q.p, base: q.base, op: "%" } });
   }
 
-  /**
-   * Optional scoring:
-   * Only increase score if user did NOT ask for a story.
-   * Hook your server endpoint here if you want points.
-   */
-  async function incMultiplicationScoreIfAllowed() {
+  async function incPercentScoreIfAllowed() {
     if (noPointsThisQuestion) return;
 
     const username = localStorage.getItem("username");
     if (!username) return;
 
     try {
-      await fetch(`${API_BASE}/score/multiplication`, {
+      await fetch(`${API_BASE}/score/percent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username }),
       });
     } catch {
-      // no UI interruption if server is down
+      // silent fail
     }
   }
 
-  /**
-   * Validate input and check answer.
-   * On correct answer: show success, trigger effects, optionally score, then auto-advance.
-   * On wrong answer: show error, trigger bad effects.
-   */
   function checkAnswer() {
     const val = Number(input);
 
@@ -259,7 +254,7 @@ export default function PracticeMultiplication() {
       savePracticeState({ msg: m });
 
       triggerCatFx();
-      incMultiplicationScoreIfAllowed();
+      incPercentScoreIfAllowed();
 
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => goNextQuestion(level), 1000);
@@ -272,7 +267,6 @@ export default function PracticeMultiplication() {
     savePracticeState({ msg: m });
   }
 
-  /** Cleanup timer on unmount */
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -293,21 +287,22 @@ export default function PracticeMultiplication() {
       <CatCongrats />
       <CatUncongrats />
 
-      <h2>תרגול כפל</h2>
+      <h2>תרגול אחוזים</h2>
 
       <div className="mt-2 rounded-2xl bg-white p-3 ring-1 ring-slate-200">
         <div className="text-xs font-bold text-slate-600">הרמה שלך:</div>
         <div className="text-sm font-extrabold text-slate-900">
-          {level === "beginners"
+          {level === "easy"
             ? "מתחילים 😺"
-            : level === "advanced"
+            : level === "medium"
             ? "מתקדמים 🐾"
             : "אלופים 🐯"}
         </div>
       </div>
 
-      <div style={{ fontSize: 28, fontWeight: 800, margin: "16px 0" }}>
-        ?= {q.a} × {q.b}
+      {/* Question display */}
+      <div style={{ fontSize: 22, fontWeight: 900, margin: "16px 0", lineHeight: 1.4 }}>
+        כמה זה {q.p}% מתוך {q.base} ?
       </div>
 
       <input

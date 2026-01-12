@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { GoogleGenAI } from "@google/genai";
 
-// הרבה "מקורות" קצרים ומגוונים (ה-RAG ישלוף מתוכם)
+// example knowledge base
 const KB = [
   "מתי מצא 5 כדורי צמר ואז עוד 5 כדורי צמר, והוא ספר אותם ביחד.",
   "מתי אסף 7 מדבקות, ואז חבר נתן לו עוד 3 מדבקות.",
@@ -56,9 +56,9 @@ export default function CatRagMini() {
 
   const ai = useMemo(() => new GoogleGenAI({ apiKey: API_KEY }), [API_KEY]);
 
-  // מכינים "מסמכים" ל-RAG
+  // prepare knowledge base chunks
   const docs = useMemo(() => {
-    // אפשר לשמור כמו שהם, אבל נחלק גם לצ'אנקים כדי שיעבוד טוב
+    //makes chunks from all KB
     const all = KB.join("\n");
     return chunkText(all, 220, 40);
   }, []);

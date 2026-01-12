@@ -1,6 +1,8 @@
+// src/pages/CatStory.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { GoogleGenAI } from "@google/genai";
+import catReadGif from "../assets/cat-read.gif";
 
 const KB = [
   "מתי מצא 5 כדורי צמר ואז עוד 5 כדורי צמר, והוא ספר אותם ביחד.",
@@ -49,50 +51,112 @@ function normalizeExercise(raw) {
   return s.replace("×", "*").replace("÷", "/");
 }
 
-// ✅ חדש: מחשבים תוצאה *בצד שלנו*
-function computeResult(a, b, op) {
-  const A = Number(a);
-  const B = Number(b);
+function opName(op) {
   const O = normalizeExercise(op);
+  if (O === "+") return "חיבור";
+  if (O === "-") return "חיסור";
+  if (O === "*") return "כפל";
+  if (O === "/") return "חילוק";
+  if (O === "%") return "אחוזים";
+  return "פעולה";
+}
 
-  if (!Number.isFinite(A) || !Number.isFinite(B)) return null;
+/**
+ * Build a question string + compute expected result.
+ * Supports:
+ * - arithmetic: { a, b, op: + - * / }
+ * - percent:   { p, base, op: "%" } meaning: p% of base
+ *
+ * Returns:
+ * { q, expected, allowedNums[] }
+ */
+function buildQuestionAndAnswer(state) {
+  const O = normalizeExercise(state?.op || "+");
 
+  // Percent mode: p% of base
+  if (O === "%") {
+    const p = Number(state?.p);
+    const base = Number(state?.base);
+    if (!Number.isFinite(p) || !Number.isFinite(base)) return null;
+
+    const expected = (base * p) / 100;
+
+    // We keep it kid-friendly: accept only finite numbers.
+    if (!Number.isFinite(expected)) return null;
+
+    // Create a compact "q" that our validator can parse reliably.
+    // Example: "25%of80"
+    const q = `${p}%of${base}`;
+
+    return {
+      q,
+      expected,
+      allowedNums: [p, base, expected],
+      mode: "percent",
+    };
+  }
+
+  // Arithmetic mode: a op b
+  const a = Number(state?.a);
+  const b = Number(state?.b);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+
+  let expected = null;
   switch (O) {
     case "+":
-      return A + B;
+      expected = a + b;
+      break;
     case "-":
-      return A - B;
+      expected = a - b;
+      break;
     case "*":
-      return A * B;
+      expected = a * b;
+      break;
     case "/":
-      // אם אתה לא רוצה שברים לילדים:
-      if (B === 0) return null;
-      // אפשר להחזיר רק אם מתחלק יפה:
-      if (A % B !== 0) return A / B; // או return null; אם אתה רוצה רק שלמים
-      return A / B;
+      if (b === 0) return null;
+      expected = a / b;
+      break;
     default:
       return null;
   }
+
+  if (!Number.isFinite(expected)) return null;
+
+  const q = normalizeExercise(`${a}${O}${b}`);
+  return {
+    q,
+    expected,
+    allowedNums: [a, b, expected],
+    mode: "arith",
+  };
 }
 
-// ✅ חדש: בדיקה שהמודל לא “הוסיף מספרים”
-function isValidStory(story, q, expected) {
+/**
+ * Validate that the story:
+ * 1) contains the exact mustLine: "q = expected"
+ * 2) contains ONLY allowed numbers (no extra numbers)
+ * 3) q format is either:
+ *    - arith:   "A+B" / "A-B" / "A*B" / "A/B"
+ *    - percent: "p%ofbase"
+ */
+function isValidStory(story, q, expected, allowedNums) {
   if (!story) return false;
 
   const mustLine = `${q} = ${expected}`;
   if (!story.includes(mustLine)) return false;
 
-  // לא מרשים שום מספר אחר חוץ מ-a,b,expected (גם לא “7” פתאום)
-  // מוצאים כל המספרים בטקסט:
+  // Extract all numeric tokens from story
   const nums = (story.match(/-?\d+(\.\d+)?/g) || []).map(Number);
 
-  // מפרקים את q כדי לדעת מה a,b בפועל
-  const m = q.match(/^(-?\d+)([+\-*/])(-?\d+)$/);
-  if (!m) return false;
-  const A = Number(m[1]);
-  const B = Number(m[3]);
+  // Validate q format
+  const arithOK = /^-?\d+([+\-*/])-?\d+$/.test(q);
+  const percentOK = /^-?\d+%of-?\d+$/.test(q);
+  if (!arithOK && !percentOK) return false;
 
-  const allowed = new Set([A, B, Number(expected)]);
+  const allowed = new Set((allowedNums || []).map((x) => Number(x)));
+
+  // All numbers in story must be in the allowed set.
+  // (This is strict: no dates, no line counts, no extra numbers.)
   return nums.every((n) => allowed.has(n));
 }
 
@@ -103,10 +167,6 @@ export default function CatStory() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  const a = state?.a;
-  const b = state?.b;
-  const op = state?.op || "+";
-
   const docs = useMemo(() => chunkText(KB.join("\n"), 220, 40), []);
   const vecsRef = useRef([]);
 
@@ -116,6 +176,7 @@ export default function CatStory() {
   const [indexed, setIndexed] = useState(false);
   const didRunRef = useRef(false);
 
+  // 1) Index KB embeddings
   useEffect(() => {
     (async () => {
       setErr("");
@@ -145,20 +206,20 @@ export default function CatStory() {
     })();
   }, [API_KEY, ai, docs]);
 
+  // 2) Generate story for the received exercise (arith or percent)
   useEffect(() => {
     (async () => {
       if (!indexed) return;
       if (didRunRef.current) return;
-      if (a == null || b == null) return;
 
-      const q = normalizeExercise(`${a}${op}${b}`);
-      const expected = computeResult(a, b, op);
-
-      if (expected == null) {
-        setErr("התרגיל לא תקין (אולי חילוק באפס/בעיה במספרים).");
+      const qa = buildQuestionAndAnswer(state);
+      if (!qa) {
+        setErr("התרגיל לא תקין (בדוק את הנתונים שנשלחו לדף הסיפור).");
         setStatus("failed ❌");
         return;
       }
+
+      const { q, expected, allowedNums } = qa;
 
       didRunRef.current = true;
 
@@ -182,10 +243,19 @@ export default function CatStory() {
           .map((s, idx) => `Source ${idx + 1}: ${s.text}`)
           .join("\n\n");
 
-        // ✅ פונקציה לנסיון חוזר אם הוא מזייף
-        async function generateOnce(strict) {
-          const mustLine = `${q} = ${expected}`;
+        const mustLine = `${q} = ${expected}`;
 
+        // Helper for nicer Hebrew display inside the prompt
+        let exerciseForKids = q;
+        if (q.includes("%of")) {
+          const mm = q.match(/^(-?\d+)%of(-?\d+)$/);
+          if (mm) exerciseForKids = `${mm[1]}% מתוך ${mm[2]}`;
+        }
+
+        const onlyNumsText = allowedNums.join(", ");
+        const opLabel = opName(state?.op);
+
+        async function generateOnce(strict) {
           const prompt = `
 אתה "מתי החתול" שמלמד ילדים חשבון. תכתוב בעברית פשוטה לילדים.
 
@@ -193,25 +263,23 @@ export default function CatStory() {
 - בדיוק 5 עד 7 שורות.
 - בלי סיכום/מסקנה/״תשובה״ בסוף.
 - שורה אחת חייבת להיות *בדיוק* כך (כולל רווחים): ${mustLine}
-- אל תכתוב שום מספר אחר בטקסט (לא ספרות ולא במילים). מותר רק: ${a}, ${b}, ${expected}
-- משפט קצר אחד שמסביר מה עושים בפעולה (${q.includes("+") ? "חיבור" : q.includes("-") ? "חיסור" : q.includes("*") ? "כפל" : "חילוק"}).
+- אל תכתוב שום מספר אחר בטקסט (לא ספרות ולא במילים).
+- מותר להופיע רק המספרים האלה: ${onlyNumsText}
+- משפט קצר אחד שמסביר מה עושים בפעולה (${opLabel}).
 
 מקורות (רק השראה לסצנה):
 ${context}
 
-תרגיל: ${q}
+תרגיל: ${exerciseForKids}
 
 ${strict ? "אם אתה לא יכול לעמוד בכללים — תחזיר רק 3 שורות לפי הכללים." : ""}
 `.trim();
 
-          // ✅ מורידים יצירתיות כדי שלא “יזייף”
           const res = await ai.models.generateContent({
             model: "gemini-2.0-flash",
             contents: prompt,
-            // אם הספרייה שלך תומכת: זה עוזר מאוד
+            // If your SDK supports it, these help reduce hallucinations:
             // generationConfig: { temperature: 0, topP: 0.1 },
-            // או לפעמים זה נקרא:
-            // config: { temperature: 0, topP: 0.1 },
           });
 
           return res?.text || "";
@@ -220,16 +288,13 @@ ${strict ? "אם אתה לא יכול לעמוד בכללים — תחזיר ר�
         setStatus("Generating story...");
         let storyText = await generateOnce(false);
 
-        // ✅ בדיקה + ניסיון חוזר קשוח
-        if (!isValidStory(storyText, q, expected)) {
+        if (!isValidStory(storyText, q, expected, allowedNums)) {
           storyText = await generateOnce(true);
         }
 
-        // ✅ אם עדיין לא תקין — מתקנים לפחות את שורת המשוואה
-        // (ועדיף שתראה שתקין מאשר שקרי)
-        if (!isValidStory(storyText, q, expected)) {
+        // Final fallback: ensure at least the math line is correct
+        if (!isValidStory(storyText, q, expected, allowedNums)) {
           const lines = (storyText || "").split("\n").filter(Boolean);
-          const mustLine = `${q} = ${expected}`;
           const fixed = [
             lines[0] || "מתי החתול לומד חשבון עם צעצועים.",
             mustLine,
@@ -239,7 +304,7 @@ ${strict ? "אם אתה לא יכול לעמוד בכללים — תחזיר ר�
         }
 
         sessionStorage.setItem("cat_story_text", storyText);
-        sessionStorage.setItem("cat_story_return", "1"); // ✅ דגל שחזרנו מסיפור
+        sessionStorage.setItem("cat_story_return", "1");
         navigate(-1);
       } catch (e) {
         console.error(e);
@@ -247,15 +312,36 @@ ${strict ? "אם אתה לא יכול לעמוד בכללים — תחזיר ר�
         setStatus("failed ❌");
       }
     })();
-  }, [indexed, a, b, op, ai, docs, navigate]);
+  }, [indexed, ai, docs, navigate, state]);
 
   return (
-    <div style={{ padding: 16, fontFamily: "sans-serif", direction: "rtl" }}>
+    <div
+      style={{
+        padding: 16,
+        fontFamily: "sans-serif",
+        direction: "rtl",
+        textAlign: "center",
+      }}
+    >
       <h2 style={{ marginTop: 0 }}>מתי החתול מכין סיפור... 🐱📚</h2>
-      <div>
-        <b>Status:</b> {status}
-      </div>
+
+      <img
+        src={catReadGif}
+        alt="מתי החתול קורא"
+        style={{
+          width: 220,
+          maxWidth: "90%",
+          margin: "12px auto",
+          display: "block",
+          borderRadius: 16,
+        }}
+      />
+
+      {/* Optional: show status for debugging */}
+      {/* <div style={{ fontSize: 12, color: "#64748b" }}>{status}</div> */}
+
       {err ? <pre style={{ whiteSpace: "pre-wrap" }}>{err}</pre> : null}
+
       <p style={{ marginTop: 10, color: "#475569" }}>עוד רגע מחזיר אותך לתרגיל...</p>
     </div>
   );

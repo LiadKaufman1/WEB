@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import catWelcomeGif from "./assets/CatWelcome.gif";
 
-export default function CheckLogin() {
+export default function CheckTest1() {
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -9,16 +10,25 @@ export default function CheckLogin() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ אם כבר מחובר – לא מציגים מסך לוגין בכלל
+  const [showGif, setShowGif] = useState(false);
+  const timerRef = useRef(null);
+
+
   useEffect(() => {
+    if (showGif) return;
     if (localStorage.getItem("isLoggedIn") === "1") {
       navigate("/addition", { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, showGif]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   async function check(e) {
     if (e?.preventDefault) e.preventDefault();
-
     if (loading) return;
 
     if (username.trim() === "" || password.trim() === "") {
@@ -46,20 +56,21 @@ export default function CheckLogin() {
       if (data.ok) {
         setMsg("התחברות הצליחה ✅");
 
-        localStorage.setItem("isLoggedIn", "1");
-        localStorage.setItem("username", username);
+        // gif first
+        setShowGif(true);
 
-        window.dispatchEvent(new Event("auth-changed")); // מעדכן את התפריט
+        // ✅ show gif 0.8s then navigate
+        timerRef.current = setTimeout(() => {
+          localStorage.setItem("isLoggedIn", "1");
+          localStorage.setItem("username", username);
+          window.dispatchEvent(new Event("auth-changed"));
+          navigate("/addition", { replace: true });
+        }, 800);
 
-        navigate("/addition", { replace: true }); // ✅ מעבר ישר
         return;
       }
 
-      if (data.reason === "NO_USER") {
-        setMsg("שם משתמש לא קיים ❌");
-      } else {
-        setMsg("סיסמה לא נכונה ❌");
-      }
+      setMsg(data.reason === "NO_USER" ? "שם משתמש לא קיים ❌" : "סיסמה לא נכונה ❌");
     } catch {
       setMsg("השרת לא זמין");
     } finally {
@@ -71,7 +82,6 @@ export default function CheckLogin() {
     <div style={{ maxWidth: 420, margin: "40px auto", fontFamily: "Arial" }}>
       <h2>בדיקת התחברות</h2>
 
-      {/* ✅ Enter עובד */}
       <form onSubmit={check}>
         <input
           value={username}
@@ -94,7 +104,44 @@ export default function CheckLogin() {
       </form>
 
       <p style={{ marginTop: 12 }}>{msg}</p>
+
+      {/* ✅ Overlay עם GIF */}
+      {showGif && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: 22,
+              padding: 18,
+              textAlign: "center",
+              width: 340,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+            }}
+          >
+            <img
+              src={catWelcomeGif}
+              alt="Cat Welcome"
+              width={260}
+              height={240}
+              style={{ borderRadius: 18, display: "block", margin: "0 auto" }}
+            />
+            <div style={{ marginTop: 10, fontWeight: 800, fontSize: 18 }}>
+              התחברת בהצלחה! 🐱✨
+            </div>
+            <div style={{ color: "#555", marginTop: 4 }}>עוד רגע מתחילים…</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

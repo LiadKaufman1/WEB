@@ -1,23 +1,20 @@
 import { Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
-import CheckTest1 from "./CheckTest1.jsx"; // Login
+import logo from "../logo.svg"; // ✅ client/logo.svg
+
+import CheckTest1 from "./CheckTest1.jsx";
 import Register from "./pages/Register.jsx";
 import About from "./pages/About.jsx";
-
-import Start from "./pages/Start.jsx"; // ✅ הוספנו מסך בית
+import Start from "./pages/Start.jsx";
 
 import AdditionPractice from "./pages/AdditionPractice.jsx";
 import SubtractionPractice from "./pages/SubtractionPractice.jsx";
 import MultiplicationPractice from "./pages/MultiplicationPractice.jsx";
 import DivisionPractice from "./pages/DivisionPractice.jsx";
+import PracticePercent from "./pages/PracticePercent.jsx"; // ✅ NEW: Percent page
 
-// ✅ חדש: צ'אט RAG חתול
-import CatRagChat from "./pages/CatRagChat.jsx";
-
-// ✅ חדש: CatStory (מייצר סיפור ומחזיר ל-AdditionPractice)
 import CatStory from "./pages/CatStory.jsx";
-
-import { useEffect, useState } from "react";
 
 function NotFound() {
   return (
@@ -38,7 +35,7 @@ function Tab({ to, emoji, children }) {
       to={to}
       className={({ isActive }) =>
         [
-          "group inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-extrabold",
+          "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-extrabold",
           "transition active:scale-[0.98]",
           "focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-200",
           isActive
@@ -49,7 +46,6 @@ function Tab({ to, emoji, children }) {
     >
       <span className="text-base">{emoji}</span>
       <span className="whitespace-nowrap">{children}</span>
-      <span className="ml-1 hidden h-1.5 w-1.5 rounded-full bg-amber-400 group-[.active]:inline-block" />
     </NavLink>
   );
 }
@@ -64,7 +60,7 @@ function ProtectedRoute({ children }) {
 }
 
 function PublicOnlyRoute({ children }) {
-  if (isLoggedIn()) return <Navigate to="/start" replace />; // ✅ אם מחובר — לבית
+  if (isLoggedIn()) return <Navigate to="/start" replace />;
   return children;
 }
 
@@ -92,20 +88,26 @@ export default function App() {
           <div className="flex flex-col gap-3 rounded-3xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-900 text-white shadow-sm">
-                  <span className="text-xl">🐱</span>
+                {/* ✅ לוגו */}
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/80 ring-1 ring-slate-200 shadow-sm">
+                  <img
+                    src={logo}
+                    alt="Mati the Cat logo"
+                    className="h-9 w-9"
+                  />
                 </div>
 
                 <div className="leading-tight">
                   <div className="text-lg font-black text-slate-900">
-                    חתול־חשבון
+                    מתי החתול
                     <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold text-amber-700">
-                      כיף ללמוד!
+                      חשבון בקלות 
                     </span>
                   </div>
+
                   <div className="text-sm font-semibold text-slate-600">
                     {authed
-                      ? "מתחילים בבית — ואז בוחרים תרגול 🐾"
+                      ? "לומדים בכיף 🐾"
                       : "קודם נכנסים / נרשמים — ואז מתחילים לתרגל 😺"}
                   </div>
                 </div>
@@ -141,12 +143,10 @@ export default function App() {
                 <Tab to="/division" emoji="➗">
                   חילוק
                 </Tab>
-
-                {/* ✅ חדש: צ'אט RAG */}
-                <Tab to="/cat-rag" emoji="💬">
-                  צ׳אט RAG
+                {/* ✅ REPLACED: RAG Chat -> Percent */}
+                <Tab to="/percent" emoji="📊">
+                  אחוזים
                 </Tab>
-
                 <Tab to="/about" emoji="ℹ️">
                   אודות
                 </Tab>
@@ -157,13 +157,11 @@ export default function App() {
 
         <main className="rounded-3xl border border-white/60 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6">
           <Routes>
-            {/* ✅ דף ראשי: מפנה לפי מצב התחברות */}
             <Route
               path="/"
               element={<Navigate to={authed ? "/start" : "/login"} replace />}
             />
 
-            {/* ✅ דפים ציבוריים */}
             <Route
               path="/login"
               element={
@@ -172,6 +170,7 @@ export default function App() {
                 </PublicOnlyRoute>
               }
             />
+
             <Route
               path="/register"
               element={
@@ -180,9 +179,9 @@ export default function App() {
                 </PublicOnlyRoute>
               }
             />
+
             <Route path="/about" element={<About />} />
 
-            {/* ✅ בית (מוגן) */}
             <Route
               path="/start"
               element={
@@ -192,7 +191,6 @@ export default function App() {
               }
             />
 
-            {/* ✅ תרגולים (מוגנים) */}
             <Route
               path="/addition"
               element={
@@ -201,6 +199,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/subtraction"
               element={
@@ -209,6 +208,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/multiplication"
               element={
@@ -217,6 +217,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/division"
               element={
@@ -226,22 +227,21 @@ export default function App() {
               }
             />
 
-            {/* ✅ חדש: CatStory (מוגן) — זה הנתיב שחסר לך */}
+            {/* ✅ NEW: Percent practice */}
+            <Route
+              path="/percent"
+              element={
+                <ProtectedRoute>
+                  <PracticePercent />
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="/cat-story"
               element={
                 <ProtectedRoute>
                   <CatStory />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* ✅ חדש: צ'אט RAG (מוגן) */}
-            <Route
-              path="/cat-rag"
-              element={
-                <ProtectedRoute>
-                  <CatRagChat />
                 </ProtectedRoute>
               }
             />
