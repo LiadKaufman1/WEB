@@ -8,38 +8,42 @@ const SUB_STATE_KEY = "subtraction_practice_state_v1";
 const API_BASE = API_URL;
 
 const LEVELS = {
-  easy: { label: "Beginner (0–10)", min: 0, max: 10 },
-  medium: { label: "Advanced (0–50)", min: 0, max: 50 },
-  hard: { label: "Expert (0–200)", min: 0, max: 200 },
+  easy: { label: "מתחילים (0–10)", min: 0, max: 10 },
+  medium: { label: "מתקדמים (0–50)", min: 0, max: 50 },
+  hard: { label: "אלופים (0–200)", min: 0, max: 200 },
 };
 
 const LEVEL_TEXT = {
   easy: {
-    title: "Level 1: Easy 😺",
+    title: "רמה קלה 😺",
     body:
-      "Here we learn subtraction calmly and clearly.\n" +
-      "Start with the big number.\n" +
-      "Count backwards for the second number.\n" +
-      "Example: 5 − 2 → 4, 3.\n" +
-      "Cat Tip: Subtracting 0 changes nothing! 😸",
+      "פה החתול לומד חיסור רגוע וברור.\n" +
+      "מתחילים מהמספר הגדול.\n" +
+      "את המספר השני הופכים לצעדים אחורה.\n" +
+      "סופרים לאט לאחור.\n" +
+      "דוגמה: 5 − 2 → 4, 3.\n" +
+      "טיפ של חתול: אם מחסרים 0 — הכל נשאר אותו דבר 😸",
   },
   medium: {
-    title: "Level 2: Medium 🐾",
+    title: "רמה בינונית 🐾",
     body:
-      "Time for a clever subtraction trick.\n" +
-      "Instead of counting many steps back, reach a round number first.\n" +
-      "Then subtract the rest.\n" +
-      "Example: 34 − 6 → 30, then 28.\n" +
-      "Cat Tip: Round numbers make subtraction easy! 🐾",
+      "כאן החתול משתמש בטריק חכם של חיסור.\n" +
+      "במקום לספור הרבה צעדים אחורה,\n" +
+      "מגיעים למספר עגול קודם.\n" +
+      "ואז מחסרים את מה שנשאר.\n" +
+      "דוגמה: 34 − 6 → 30 ואז 28.\n" +
+      "טיפ של חתול: מספרים עגולים עושים חיסור קל 🐾",
   },
   hard: {
-    title: "Level 3: Hard 🐯",
+    title: "רמה קשה 🐯",
     body:
-      "For cats who have mastered the basics.\n" +
-      "Break down the number you are subtracting.\n" +
-      "Subtract tens first, then the ones.\n" +
-      "Example: 146 − 37 → 116, then 109.\n" +
-      "Cat Tip: Breaking it down is the secret to smart math! 🧠",
+      "זו רמה לחתולים שכבר שולטים בחיסור.\n" +
+      "כדי לא להתבלבל, מפרקים את המספר שמחסרים.\n" +
+      "קודם מחסרים עשרות.\n" +
+      "אחר כך מחסרים יחידות.\n" +
+      "בסוף בודקים שהכל הגיוני.\n" +
+      "דוגמה: 146 − 37 → 116 ואז 109.\n" +
+      "טיפ של חתול: לפרק זה סוד החישוב החכם 🧠",
   },
 };
 
@@ -181,7 +185,7 @@ export default function PracticeSubtraction() {
   function checkAnswer() {
     const val = Number(input);
     if (input.trim() === "" || !Number.isFinite(val)) {
-      const m = "Please type a number";
+      const m = "אנא הקלד מספר";
       setMsg(m);
       savePracticeState({ msg: m });
       return;
@@ -189,8 +193,8 @@ export default function PracticeSubtraction() {
 
     if (val === q.ans) {
       const m = noPointsThisQuestion
-        ? "✅ Correct! (No points because you used a story)"
-        : "✅ Correct!";
+        ? "✅ נכון! (ללא נקודות כי השתמשת בסיפור)"
+        : "✅ נכון!";
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -203,7 +207,7 @@ export default function PracticeSubtraction() {
     }
 
     triggerBadCatFx();
-    const m = "❌ Incorrect, try again";
+    const m = "❌ טעות, נסה שוב";
     setMsg(m);
     savePracticeState({ msg: m });
   }
@@ -220,17 +224,17 @@ export default function PracticeSubtraction() {
       <CatUncongrats />
 
       <div className="card p-6 md:p-8">
-        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">Subtraction Practice ➖</h2>
+        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">תרגול חיסור ➖</h2>
 
         <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
-          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Current Level</span>
+          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">רמה נוכחית</span>
           <span className="text-lg font-extrabold text-blue-600">
-            {level === "easy" ? "Beginner 😺" : level === "medium" ? "Advanced 🐾" : "Expert 🐯"}
+            {level === "easy" ? "מתחילים 😺" : level === "medium" ? "מתקדמים 🐾" : "אלופים 🐯"}
           </span>
         </div>
 
         {/* Question Display */}
-        <div className="text-center py-6">
+        <div className="text-center py-6" dir="ltr">
           <div className="flex items-center justify-center gap-4 text-5xl md:text-6xl font-black text-slate-800 tracking-wider">
             <span>{q.a}</span>
             <span className="text-blue-500">−</span>
@@ -261,30 +265,30 @@ export default function PracticeSubtraction() {
             onClick={checkAnswer}
             className="w-full py-4 text-xl font-bold rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
           >
-            Check Answer
+            בדוק תשובה
           </button>
 
           <div className="flex gap-3">
             <button
               onClick={goStory}
               className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="Mati will tell a story about this problem"
+              title="מתי יספר סיפור על התרגיל"
             >
-              Tell a Story 📖
+              ספר סיפור 📖
             </button>
             <button
               onClick={() => goNextQuestion(level)}
               className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="Skip to next question"
+              title="דלג לתרגיל הבא"
             >
-              Skip ➜
+              דלג ➜
             </button>
           </div>
         </div>
 
         {/* Message */}
         {msg && (
-          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("Correct") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("נכון") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
             {msg}
           </div>
         )}
@@ -302,7 +306,7 @@ export default function PracticeSubtraction() {
         {/* Story Display */}
         {story && (
           <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
-            <h3 className="font-black text-amber-800 mb-2">Mati's Story 😺</h3>
+            <h3 className="font-black text-amber-800 mb-2">הסיפור של מתי 😺</h3>
             <pre className="whitespace-pre-wrap font-sans text-sm text-amber-900 leading-relaxed">
               {story}
             </pre>

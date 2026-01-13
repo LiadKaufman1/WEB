@@ -11,23 +11,23 @@ function getMedal(value) {
   if (v >= GOLD) {
     return {
       emoji: "🥇",
-      title: "Gold",
-      hint: "Outstanding! You are a math champion! 🏆",
+      title: "זהב",
+      hint: "מדהים! אתה אלוף החשבון! 🏆",
       pill: "bg-amber-100 text-amber-800 border-amber-200",
     };
   }
   if (v >= SILVER) {
     return {
       emoji: "🥈",
-      title: "Silver",
-      hint: "Great job! Keep going for Gold! 🚀",
+      title: "כסף",
+      hint: "כל הכבוד! תמשיך לזהב! 🚀",
       pill: "bg-slate-100 text-slate-700 border-slate-200",
     };
   }
   return {
     emoji: "🎯",
-    title: "On Track",
-    hint: `${Math.max(0, SILVER - v)} more points for Silver 🥈`,
+    title: "בדרך",
+    hint: `עוד ${Math.max(0, SILVER - v)} נקודות למדליית כסף 🥈`,
     pill: "bg-blue-50 text-blue-700 border-blue-100",
   };
 }
@@ -46,7 +46,7 @@ export default function Stats() {
     console.log("Username for stats:", username);
 
     if (!username) {
-      setErr("No username found. Please log in again.");
+      setErr("לא נמצא שם משתמש. נא להתחבר מחדש.");
       setLoading(false);
       return;
     }
@@ -71,7 +71,7 @@ export default function Stats() {
       }
 
       if (!res.ok || !data.ok) {
-        setErr(data.error || "Failed to load data.");
+        setErr(data.error || "שגיאה בטעינת הנתונים.");
         setLoading(false);
         return;
       }
@@ -80,7 +80,7 @@ export default function Stats() {
       setLoading(false);
     } catch (error) {
       console.error("Load Stats Error:", error);
-      setErr(`Network Error: ${error.message}`);
+      setErr(`שגיאת רשת: ${error.message}`);
       setLoading(false);
     }
   }
@@ -92,11 +92,11 @@ export default function Stats() {
   const rows = useMemo(() => {
     const s = stats || {};
     return [
-      { key: "addition", label: "Addition", emoji: "➕", value: s.addition ?? 0 },
-      { key: "subtraction", label: "Subtraction", emoji: "➖", value: s.subtraction ?? 0 },
-      { key: "multiplication", label: "Multiplication", emoji: "✖️", value: s.multiplication ?? 0 },
-      { key: "division", label: "Division", emoji: "➗", value: s.division ?? 0 },
-      { key: "percent", label: "Percent", emoji: "％", value: s.percent ?? 0 },
+      { key: "addition", label: "חיבור", emoji: "➕", value: s.addition ?? 0 },
+      { key: "subtraction", label: "חיסור", emoji: "➖", value: s.subtraction ?? 0 },
+      { key: "multiplication", label: "כפל", emoji: "✖️", value: s.multiplication ?? 0 },
+      { key: "division", label: "חילוק", emoji: "➗", value: s.division ?? 0 },
+      { key: "percent", label: "אחוזים", emoji: "％", value: s.percent ?? 0 },
     ];
   }, [stats]);
 
@@ -109,11 +109,11 @@ export default function Stats() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-black text-slate-900 flex items-center gap-3">
-              <span>Achievements</span>
+              <span>ההישגים שלי</span>
               <span className="text-3xl">🏆</span>
             </h2>
             <p className="mt-2 text-slate-500 font-medium">
-              Earn medals in each subject: <span className="font-bold text-slate-700">30pts = Silver</span>, <span className="font-bold text-amber-600">60pts = Gold</span>
+              אסוף מדליות בכל נושא: <span className="font-bold text-slate-700">30 נק' = כסף</span>, <span className="font-bold text-amber-600">60 נק' = זהב</span>
             </p>
           </div>
 
@@ -121,7 +121,7 @@ export default function Stats() {
             onClick={loadStats}
             className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
           >
-            Refresh Data 🔄
+            רענן נתונים 🔄
           </button>
         </div>
 
@@ -134,16 +134,16 @@ export default function Stats() {
 
         {loading ? (
           <div className="py-12 text-center text-slate-400 font-medium animate-pulse">
-            Loading your progress...
+            טוען נתונים...
           </div>
         ) : stats ? (
           <div className="grid gap-6">
             {/* Summary Card */}
             <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 p-6">
-              <h3 className="text-xl font-bold text-slate-800 mb-2">Progress Summary 📊</h3>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">סיכום התקדמות 📊</h3>
               <p className="text-slate-600 leading-relaxed">
-                You have collected <b>{silverCount}</b> Silver medals 🥈 and <b>{goldCount}</b> Gold medals 🥇 so far.
-                Keep practicing to unlock more!
+                אספת עד כה <b>{silverCount}</b> מדליות כסף 🥈 ו-<b>{goldCount}</b> מדליות זהב 🥇.
+                תמשיך לתרגל כדי להשיג עוד!
               </p>
             </div>
 
@@ -155,7 +155,7 @@ export default function Stats() {
             </div>
           </div>
         ) : (
-          <div className="py-12 text-center text-slate-400">No data available yet.</div>
+          <div className="py-12 text-center text-slate-400">אין נתונים זמינים.</div>
         )}
       </div>
     </div>

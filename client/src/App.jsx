@@ -20,9 +20,9 @@ function NotFound() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10">
       <div className="card border-rose-200 bg-white p-6 shadow-sm">
-        <div className="text-2xl font-extrabold text-rose-600">Oops! 🐾</div>
+        <div className="text-2xl font-extrabold text-rose-600">אופס! 🐾</div>
         <p className="mt-2 text-slate-600">
-          Page not found. Please check the URL or go back home.
+          הדף לא נמצא. אנא בדוק את הכתובת או חזור לדף הבית.
         </p>
       </div>
     </div>
@@ -76,7 +76,7 @@ export default function App() {
   }, []);
 
   function handleLogout() {
-    if (window.confirm("Are you sure you want to log out? 🚪")) {
+    if (window.confirm("האם את/ה בטוח/ה שברצונך להתנתק? 🚪")) {
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("username");
       window.dispatchEvent(new Event("auth-changed"));
@@ -85,7 +85,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen font-sans text-slate-800">
+    <div className="min-h-screen font-sans text-slate-800" dir="rtl">
       {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none -z-10 bg-slate-50">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-[100px]" />
@@ -103,10 +103,10 @@ export default function App() {
               </div>
               <div>
                 <div className="text-2xl font-black text-slate-900 tracking-tight">
-                  Mati's Math
+                  החשבון של מתי
                 </div>
                 <div className="text-sm font-medium text-slate-500">
-                  {authed ? "Let's learn together! 🚀" : "Math made fun & professional"}
+                  {authed ? "בואו נלמד ביחד! 🚀" : "חשבון בכיף ובצורה מקצועית"}
                 </div>
               </div>
             </div>
@@ -115,25 +115,25 @@ export default function App() {
             <nav className="flex flex-wrap justify-center gap-2">
               {!authed ? (
                 <>
-                  <Tab to="/login" icon="🔐">Login</Tab>
-                  <Tab to="/register" icon="📝">Register</Tab>
-                  <Tab to="/about" icon="ℹ️">About</Tab>
+                  <Tab to="/login" icon="🔐">כניסה</Tab>
+                  <Tab to="/register" icon="📝">הרשמה</Tab>
+                  <Tab to="/about" icon="ℹ️">אודות</Tab>
                 </>
               ) : (
                 <>
-                  <Tab to="/start" icon="🏠">Home</Tab>
-                  <Tab to="/addition" icon="➕">Add</Tab>
-                  <Tab to="/subtraction" icon="➖">Sub</Tab>
-                  <Tab to="/multiplication" icon="✖️">Mult</Tab>
-                  <Tab to="/division" icon="➗">Div</Tab>
-                  <Tab to="/percent" icon="％">Percent</Tab>
-                  <Tab to="/about" icon="ℹ️">About</Tab>
+                  <Tab to="/start" icon="🏠">בית</Tab>
+                  <Tab to="/addition" icon="➕">חיבור</Tab>
+                  <Tab to="/subtraction" icon="➖">חיסור</Tab>
+                  <Tab to="/multiplication" icon="✖️">כפל</Tab>
+                  <Tab to="/division" icon="➗">חילוק</Tab>
+                  <Tab to="/percent" icon="％">אחוזים</Tab>
+                  <Tab to="/about" icon="ℹ️">אודות</Tab>
 
                   <button
                     onClick={handleLogout}
-                    className="ml-2 inline-flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-600 transition-all hover:bg-rose-100 hover:text-rose-700 active:scale-95"
+                    className="mr-2 inline-flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-600 transition-all hover:bg-rose-100 hover:text-rose-700 active:scale-95"
                   >
-                    <span>Log Out</span>
+                    <span>יציאה</span>
                   </button>
                 </>
               )}
@@ -161,7 +161,7 @@ export default function App() {
         </main>
 
         <footer className="mt-12 text-center text-sm font-medium text-slate-400">
-          © {new Date().getFullYear()} Mati's Math. All rights reserved. 🐾
+          © {new Date().getFullYear()} החשבון של מתי. כל הזכויות שמורות. 🐾
         </footer>
       </div>
     </div>

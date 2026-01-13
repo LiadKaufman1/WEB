@@ -8,39 +8,39 @@ const DIV_STATE_KEY = "division_practice_state_v1";
 const API_BASE = API_URL;
 
 const LEVELS = {
-  beginners: { label: "Beginner (2–5)", minDivisor: 2, maxDivisor: 5, maxAnswer: 10 },
-  advanced: { label: "Advanced (2–10)", minDivisor: 2, maxDivisor: 10, maxAnswer: 12 },
-  champs: { label: "Expert (2–12)", minDivisor: 2, maxDivisor: 12, maxAnswer: 15 },
+  beginners: { label: "מתחילים (2–5)", minDivisor: 2, maxDivisor: 5, maxAnswer: 10 },
+  advanced: { label: "מתקדמים (2–10)", minDivisor: 2, maxDivisor: 10, maxAnswer: 12 },
+  champs: { label: "אלופים (2–12)", minDivisor: 2, maxDivisor: 12, maxAnswer: 15 },
 };
 
 const LEVEL_TEXT = {
   beginners: {
-    title: "Level 1: Beginner 😺",
+    title: "מתחילים 😺",
     body:
-      "Mati explains: Division means 'sharing equally'.\n" +
-      "Take a big number (cookies 🍪).\n" +
-      "Share them into equal groups.\n" +
-      "Count how many in each group.\n" +
-      "Example: 6 ÷ 2 → 3 for each friend.\n" +
-      "Cat Tip: Draw circles to make groups! 🟣🟣🟣",
+      "מתי החתול מסביר שחילוק זה 'לחלק שווה בשווה'.\n" +
+      "לוקחים מספר גדול (עוגיות 🍪).\n" +
+      "מחלקים לקבוצות שוות.\n" +
+      "סופרים כמה יש בכל קבוצה.\n" +
+      "דוגמה: 6 ÷ 2 → 3 לכל ילד.\n" +
+      "טיפ של מתי: אפשר לצייר עיגולים ולעשות קבוצות 🟣🟣🟣",
   },
   advanced: {
-    title: "Level 2: Advanced 🐾",
+    title: "מתקדמים 🐾",
     body:
-      "Mati knows division is connected to multiplication.\n" +
-      "Ask: 'Which number times the divisor gives the big number?'\n" +
-      "Example: 24 ÷ 6 → ? × 6 = 24 → 4.\n" +
-      "If it's hard, try multiplying until you reach the number.\n" +
-      "Cat Tip: Thinking about multiplication makes division fast! 🐾",
+      "מתי החתול כבר יודע שחילוק קשור ללוח הכפל.\n" +
+      "שואלים: 'איזה מספר כפול המחלק נותן את המחולק?'\n" +
+      "דוגמה: 24 ÷ 6 → מי כפול 6 נותן 24? → 4.\n" +
+      "אם קשה — נסה כפולות עד שמגיעים למחולק.\n" +
+      "טיפ של מתי: לחשוב על כפל עושה חילוק מהיר 🐾",
   },
   champs: {
-    title: "Level 3: Expert 🐯",
+    title: "אלופים 🐯",
     body:
-      "For true math champions.\n" +
-      "Mati uses smart tricks and breakdowns.\n" +
-      "Example: 96 ÷ 8 → 80 ÷ 8 = 10 and 16 ÷ 8 = 2 → Together 12.\n" +
-      "Check with multiplication: 12 × 8 = 96 ✅\n" +
-      "Cat Tip: Checking with multiplication keeps mistakes away! 🧠",
+      "רמה של אלופים אמיתיים.\n" +
+      "מתי החתול משתמש בטריקים חכמים ופירוקים.\n" +
+      "דוגמה: 96 ÷ 8 → 80 ÷ 8 = 10 וגם 16 ÷ 8 = 2 → ביחד 12.\n" +
+      "בודקים עם כפל: 12 × 8 = 96 ✅\n" +
+      "טיפ של מתי: בדיקה בכפל שומרת על 0 טעויות 🧠",
   },
 };
 
@@ -182,7 +182,7 @@ export default function PracticeDivision() {
   function checkAnswer() {
     const val = Number(input);
     if (input.trim() === "" || !Number.isFinite(val)) {
-      const m = "Please type a number";
+      const m = "אנא הקלד מספר";
       setMsg(m);
       savePracticeState({ msg: m });
       return;
@@ -190,8 +190,8 @@ export default function PracticeDivision() {
 
     if (val === q.ans) {
       const m = noPointsThisQuestion
-        ? "✅ Correct! (No points because you used a story)"
-        : "✅ Correct!";
+        ? "✅ נכון! (ללא נקודות כי השתמשת בסיפור)"
+        : "✅ נכון!";
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -204,7 +204,7 @@ export default function PracticeDivision() {
     }
 
     triggerBadCatFx();
-    const m = "❌ Incorrect, try again";
+    const m = "❌ טעות, נסה שוב";
     setMsg(m);
     savePracticeState({ msg: m });
   }
@@ -221,17 +221,17 @@ export default function PracticeDivision() {
       <CatUncongrats />
 
       <div className="card p-6 md:p-8">
-        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">Division Practice ➗</h2>
+        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">תרגול חילוק ➗</h2>
 
         <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
-          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Current Level</span>
+          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">רמה נוכחית</span>
           <span className="text-lg font-extrabold text-blue-600">
-            {level === "beginners" ? "Beginner 😺" : level === "advanced" ? "Advanced 🐾" : "Expert 🐯"}
+            {level === "beginners" ? "מתחילים 😺" : level === "advanced" ? "מתקדמים 🐾" : "אלופים 🐯"}
           </span>
         </div>
 
         {/* Question Display */}
-        <div className="text-center py-6">
+        <div className="text-center py-6" dir="ltr">
           <div className="flex items-center justify-center gap-4 text-5xl md:text-6xl font-black text-slate-800 tracking-wider">
             <span>{q.a}</span>
             <span className="text-blue-500">÷</span>
@@ -262,30 +262,30 @@ export default function PracticeDivision() {
             onClick={checkAnswer}
             className="w-full py-4 text-xl font-bold rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
           >
-            Check Answer
+            בדוק תשובה
           </button>
 
           <div className="flex gap-3">
             <button
               onClick={goStory}
               className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="Mati will tell a story about this problem"
+              title="מתי יספר סיפור על התרגיל"
             >
-              Tell a Story 📖
+              ספר סיפור 📖
             </button>
             <button
               onClick={() => goNextQuestion(level)}
               className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="Skip to next question"
+              title="דלג לתרגיל הבא"
             >
-              Skip ➜
+              דלג ➜
             </button>
           </div>
         </div>
 
         {/* Message */}
         {msg && (
-          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("Correct") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("נכון") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
             {msg}
           </div>
         )}
@@ -303,7 +303,7 @@ export default function PracticeDivision() {
         {/* Story Display */}
         {story && (
           <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
-            <h3 className="font-black text-amber-800 mb-2">Mati's Story 😺</h3>
+            <h3 className="font-black text-amber-800 mb-2">הסיפור של מתי 😺</h3>
             <pre className="whitespace-pre-wrap font-sans text-sm text-amber-900 leading-relaxed">
               {story}
             </pre>

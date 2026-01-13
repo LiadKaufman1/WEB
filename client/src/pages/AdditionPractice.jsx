@@ -8,37 +8,41 @@ const ADD_STATE_KEY = "addition_practice_state_v1";
 const API_BASE = API_URL;
 
 const LEVELS = {
-  easy: { label: "Beginner (0–10)", min: 0, max: 10 },
-  medium: { label: "Advanced (0–50)", min: 0, max: 50 },
-  hard: { label: "Expert (0–200)", min: 0, max: 200 },
+  easy: { label: "מתחילים (0–10)", min: 0, max: 10 },
+  medium: { label: "מתקדמים (0–50)", min: 0, max: 50 },
+  hard: { label: "אלופים (0–200)", min: 0, max: 200 },
 };
 
 const LEVEL_TEXT = {
   easy: {
-    title: "Level 1: Easy 😺",
+    title: "רמה קלה 😺",
     body:
-      "We practice addition calmly and clearly here.\n" +
-      "Start with the first number.\n" +
-      "Count steps forward for the second number.\n" +
-      "Example: 3 + 2 → 4, 5.\n" +
-      "Cat Tip: Adding 0 changes nothing! 😸",
+      "פה אנחנו עושים חיבור כמו שהחתול אוהב: רגוע וברור.\n" +
+      "מתחילים מהמספר הראשון.\n" +
+      "את המספר השני הופכים לצעדים קדימה וסופרים לאט.\n" +
+      "דוגמה: 3 + 2 → 4, 5.\n" +
+      "טיפ של חתול: אם יש 0 — לא מוסיפים כלום 😸",
   },
   medium: {
-    title: "Level 2: Medium 🐾",
+    title: "רמה בינונית 🐾",
     body:
-      "Time for a clever trick.\n" +
-      "Instead of counting many steps, try to reach round numbers first (10, 20...).\n" +
-      "Example: 28 + 7 → 30, then 35.\n" +
-      "Cat Tip: Round numbers are the easiest to work with! 🐾",
+      "כאן החתול כבר משתמש בטריק קטן וחכם.\n" +
+      "במקום לספור הרבה צעדים, מגיעים למספר עגול.\n" +
+      "קודם משלימים לעשר או לעשרות.\n" +
+      "ואז מוסיפים את מה שנשאר.\n" +
+      "דוגמה: 28 + 7 → 30 ואז 35.\n" +
+      "טיפ של חתול: מספרים עגולים הם הכי נוחים 🐾",
   },
   hard: {
-    title: "Level 3: Hard 🐯",
+    title: "רמה קשה 🐯",
     body:
-      "For serious math cats only!\n" +
-      "Break numbers into parts to avoid confusion.\n" +
-      "Add hundreds/tens first, then add the ones.\n" +
-      "Example: 146 + 37 → 176, then 183.\n" +
-      "Cat Tip: Breaking numbers apart makes them manageable! 🧱",
+      "זו רמה לחתולים רציניים במיוחד.\n" +
+      "כדי לא להתבלבל, מפרקים את המספרים לחלקים.\n" +
+      "קודם מחברים עשרות או מאות.\n" +
+      "אחר כך מחברים יחידות.\n" +
+      "בסוף מחברים את הכל יחד.\n" +
+      "דוגמה: 146 + 37 → 176 ואז 183.\n" +
+      "טיפ של חתול: לפרק לחלקים זה כמו לגו 🧱",
   },
 };
 
@@ -179,7 +183,7 @@ export default function PracticeAddition() {
   function checkAnswer() {
     const val = Number(input);
     if (input.trim() === "" || !Number.isFinite(val)) {
-      const m = "Please type a number";
+      const m = "אנא הקלד מספר";
       setMsg(m);
       savePracticeState({ msg: m });
       return;
@@ -187,8 +191,8 @@ export default function PracticeAddition() {
 
     if (val === q.ans) {
       const m = noPointsThisQuestion
-        ? "✅ Correct! (No points because you used a story)"
-        : "✅ Correct!";
+        ? "✅ נכון! (ללא נקודות כי השתמשת בסיפור)"
+        : "✅ נכון!";
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -201,7 +205,7 @@ export default function PracticeAddition() {
     }
 
     triggerBadCatFx();
-    const m = "❌ Incorrect, try again";
+    const m = "❌ טעות, נסה שוב";
     setMsg(m);
     savePracticeState({ msg: m });
   }
@@ -218,17 +222,17 @@ export default function PracticeAddition() {
       <CatUncongrats />
 
       <div className="card p-6 md:p-8">
-        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">Addition Practice ➕</h2>
+        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">תרגול חיבור ➕</h2>
 
         <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
-          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Current Level</span>
+          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">רמה נוכחית</span>
           <span className="text-lg font-extrabold text-blue-600">
-            {level === "easy" ? "Beginner 😺" : level === "medium" ? "Advanced 🐾" : "Expert 🐯"}
+            {level === "easy" ? "מתחילים 😺" : level === "medium" ? "מתקדמים 🐾" : "אלופים 🐯"}
           </span>
         </div>
 
         {/* Question Display */}
-        <div className="text-center py-6">
+        <div className="text-center py-6" dir="ltr">
           <div className="flex items-center justify-center gap-4 text-5xl md:text-6xl font-black text-slate-800 tracking-wider">
             <span>{q.a}</span>
             <span className="text-blue-500">+</span>
@@ -259,30 +263,30 @@ export default function PracticeAddition() {
             onClick={checkAnswer}
             className="w-full py-4 text-xl font-bold rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
           >
-            Check Answer
+            בדוק תשובה
           </button>
 
           <div className="flex gap-3">
             <button
               onClick={goStory}
               className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="Mati will tell a story about this problem"
+              title="מתי יספר סיפור על התרגיל"
             >
-              Tell a Story 📖
+              ספר סיפור 📖
             </button>
             <button
               onClick={() => goNextQuestion(level)}
               className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="Skip to next question"
+              title="דלג לתרגיל הבא"
             >
-              Skip ➜
+              דלג ➜
             </button>
           </div>
         </div>
 
         {/* Message */}
         {msg && (
-          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("Correct") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("נכון") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
             {msg}
           </div>
         )}
@@ -300,7 +304,7 @@ export default function PracticeAddition() {
         {/* Story Display */}
         {story && (
           <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
-            <h3 className="font-black text-amber-800 mb-2">Mati's Story 😺</h3>
+            <h3 className="font-black text-amber-800 mb-2">הסיפור של מתי 😺</h3>
             <pre className="whitespace-pre-wrap font-sans text-sm text-amber-900 leading-relaxed">
               {story}
             </pre>

@@ -8,39 +8,39 @@ const PERCENT_STATE_KEY = "percent_practice_state_v1";
 const API_BASE = API_URL;
 
 const LEVELS = {
-  easy: { label: "Beginner (Very Easy)", minBase: 10, maxBase: 200 },
-  medium: { label: "Advanced (Easy)", minBase: 10, maxBase: 400 },
-  hard: { label: "Expert (Kid Friendly)", minBase: 10, maxBase: 600 },
+  easy: { label: "מתחילים (קל מאוד)", minBase: 10, maxBase: 200 },
+  medium: { label: "מתקדמים (קל)", minBase: 10, maxBase: 400 },
+  hard: { label: "אלופים (עדיין לילדים)", minBase: 10, maxBase: 600 },
 };
 
 const LEVEL_TEXT = {
   easy: {
-    title: "Level 1: Beginner 😺",
+    title: "מתחילים 😺",
     body:
-      "Percent means 'out of 100'.\n" +
-      "Super easy calculations:\n" +
-      "50% = half, 25% = quarter, 10% = divide by 10.\n" +
-      "Example: 25% of 80 = 20.\n" +
-      "Cat Tip: Try 10/25/50 first, then continue! 🐾",
+      "אחוזים זה 'כמה מתוך 100'.\n" +
+      "חישובים סופר קלים:\n" +
+      "50% = חצי, 25% = רבע, 10% = לחלק ב־10.\n" +
+      "דוגמה: 25% מ־80 = 20.\n" +
+      "טיפ של מתי: קודם עושים 10/25/50 ואז ממשיכים 🐾",
   },
   medium: {
-    title: "Level 2: Advanced 🐾",
+    title: "מתקדמים 🐾",
     body:
-      "Now we add some easy percents.\n" +
-      "5% is half of 10%.\n" +
-      "20% is double 10%.\n" +
-      "Example: 15% of 200 = 10% (20) + 5% (10) = 30.\n" +
-      "Cat Tip: Think in small pieces! 😺",
+      "עכשיו מוסיפים עוד אחוזים קלים.\n" +
+      "5% זה חצי של 10%.\n" +
+      "20% זה כפול מ־10%.\n" +
+      "דוגמה: 15% מ־200 = 10% (20) + 5% (10) = 30.\n" +
+      "טיפ של מתי: תחשוב בחתיכות קטנות 😺",
   },
   hard: {
-    title: "Level 3: Expert 🐯",
+    title: "אלופים 🐯",
     body:
-      "A bit smarter percents here but still simple.\n" +
-      "1% = divide by 100.\n" +
-      "2% = twice 1%.\n" +
-      "4% = double 2%.\n" +
-      "Example: 4% of 200 = 8.\n" +
-      "Cat Tip: You can always break percents down! 🧱",
+      "פה עושים אחוזים קצת יותר 'חכמים', אבל עדיין פשוטים.\n" +
+      "1% = לחלק ב־100.\n" +
+      "2% = פעמיים 1%.\n" +
+      "4% = כפול 2%.\n" +
+      "דוגמה: 4% מ־200 = 8.\n" +
+      "טיפ של מתי: תמיד אפשר לפרק אחוזים לחלקים 🧱",
   },
 };
 
@@ -214,7 +214,7 @@ export default function PracticePercent() {
   function checkAnswer() {
     const val = Number(input);
     if (input.trim() === "" || !Number.isFinite(val)) {
-      const m = "Please type a number";
+      const m = "אנא הקלד מספר";
       setMsg(m);
       savePracticeState({ msg: m });
       return;
@@ -222,8 +222,8 @@ export default function PracticePercent() {
 
     if (val === q.ans) {
       const m = noPointsThisQuestion
-        ? "✅ Correct! (No points because you used a story)"
-        : "✅ Correct!";
+        ? "✅ נכון! (ללא נקודות כי השתמשת בסיפור)"
+        : "✅ נכון!";
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -236,7 +236,7 @@ export default function PracticePercent() {
     }
 
     triggerBadCatFx();
-    const m = "❌ Incorrect, try again";
+    const m = "❌ טעות, נסה שוב";
     setMsg(m);
     savePracticeState({ msg: m });
   }
@@ -253,19 +253,19 @@ export default function PracticePercent() {
       <CatUncongrats />
 
       <div className="card p-6 md:p-8">
-        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">Percent Practice ％</h2>
+        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">תרגול אחוזים ％</h2>
 
         <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
-          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Current Level</span>
+          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">רמה נוכחית</span>
           <span className="text-lg font-extrabold text-blue-600">
-            {level === "easy" ? "Beginner 😺" : level === "medium" ? "Advanced 🐾" : "Expert 🐯"}
+            {level === "easy" ? "מתחילים 😺" : level === "medium" ? "מתקדמים 🐾" : "אלופים 🐯"}
           </span>
         </div>
 
         {/* Question display */}
         <div className="text-center py-6">
-          <div className="text-3xl md:text-4xl font-black text-slate-800 tracking-wide leading-relaxed">
-            How much is <span className="text-blue-600">{q.p}%</span> of <span className="text-slate-900">{q.base}</span>?
+          <div className="text-3xl md:text-4xl font-black text-slate-800 tracking-wide leading-relaxed" dir="rtl">
+            כמה זה <span className="text-blue-600">{q.p}%</span> מתוך <span className="text-slate-900">{q.base}</span>?
           </div>
         </div>
 
@@ -290,30 +290,30 @@ export default function PracticePercent() {
             onClick={checkAnswer}
             className="w-full py-4 text-xl font-bold rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
           >
-            Check Answer
+            בדוק תשובה
           </button>
 
           <div className="flex gap-3">
             <button
               onClick={goStory}
               className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="Mati will tell a story about this problem"
+              title="מתי יספר סיפור על התרגיל"
             >
-              Tell a Story 📖
+              ספר סיפור 📖
             </button>
             <button
               onClick={() => goNextQuestion(level)}
               className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="Skip to next question"
+              title="דלג לתרגיל הבא"
             >
-              Skip ➜
+              דלג ➜
             </button>
           </div>
         </div>
 
         {/* Message */}
         {msg && (
-          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("Correct") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("נכון") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
             {msg}
           </div>
         )}
@@ -331,7 +331,7 @@ export default function PracticePercent() {
         {/* Story Display */}
         {story && (
           <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
-            <h3 className="font-black text-amber-800 mb-2">Mati's Story 😺</h3>
+            <h3 className="font-black text-amber-800 mb-2">הסיפור של מתי 😺</h3>
             <pre className="whitespace-pre-wrap font-sans text-sm text-amber-900 leading-relaxed">
               {story}
             </pre>

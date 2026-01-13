@@ -17,7 +17,7 @@ export default function Register() {
 
     const ageNum = parseInt(age);
     if (isNaN(ageNum) || ageNum < 4 || ageNum > 16) {
-      setMsg("Age must be between 4 and 16");
+      setMsg("הגיל חייב להיות בין 4 ל-16");
       setLoading(false);
       return;
     }
@@ -32,7 +32,7 @@ export default function Register() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        setMsg(data.error || "Registration Failed. Try a different username.");
+        setMsg(data.error || "ההרשמה נכשלה. נסה שם משתמש אחר.");
         setLoading(false);
         return;
       }
@@ -42,7 +42,7 @@ export default function Register() {
       navigate("/login");
     } catch (err) {
       console.error(err);
-      setMsg("Server unavailable. Please try again later.");
+      setMsg("השרת לא זמין. נסה שוב מאוחר יותר.");
       setLoading(false);
     }
   };
@@ -50,44 +50,47 @@ export default function Register() {
   return (
     <div className="mx-auto max-w-md mt-10">
       <div className="card p-8">
-        <h2 className="text-3xl font-black text-center text-slate-900 mb-2">Join the Fun! 📝</h2>
-        <p className="text-center text-slate-500 mb-8 font-medium">Create a new account to start earning medals</p>
+        <h2 className="text-3xl font-black text-center text-slate-900 mb-2">הצטרף לכיף! 📝</h2>
+        <p className="text-center text-slate-500 mb-8 font-medium">צור חשבון חדש כדי לאסוף מדליות</p>
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">Username</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1">שם משתמש</label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all text-right"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Choose a username"
+              placeholder="בחר שם משתמש"
               required
+              dir="auto"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1">סיסמה</label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all text-right"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Choose a secret password"
+              placeholder="בחר סיסמה סודית"
               type="password"
               required
+              dir="auto"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">Age</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1">גיל</label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all text-right"
               value={age}
               onChange={(e) => setAge(e.target.value)}
-              placeholder="How old are you? (4-16)"
+              placeholder="בן/בת כמה את/ה? (4-16)"
               type="number"
               min="4"
               max="16"
               required
+              dir="auto"
             />
           </div>
 
@@ -96,7 +99,7 @@ export default function Register() {
             disabled={loading}
             className="w-full rounded-xl bg-blue-600 py-3.5 text-lg font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
           >
-            {loading ? "Creating Account..." : "Create Account ✨"}
+            {loading ? "יוצר חשבון..." : "צור חשבון ✨"}
           </button>
         </form>
 
