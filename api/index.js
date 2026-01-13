@@ -137,6 +137,7 @@ scoreFields.forEach(field => {
 
 // 🔹 Debug Ping
 api.get("/ping", (req, res) => res.json({ msg: "pong", time: new Date() }));
+api.get("/test", (req, res) => res.send("Typescript Test works via Express!"));
 
 // ✅ Mount API Router (HANDLE BOTH /api and / for Vercel robustness)
 app.use("/api", api);
