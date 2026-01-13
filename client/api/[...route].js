@@ -28,15 +28,14 @@ const connectToDatabase = async () => {
 
   try {
     const db = await mongoose.connect(MONGO_URI, {
-      // Optional: Add timeouts if needed
       serverSelectionTimeoutMS: 5000,
-      dbName: 'MathGameDB' // 🔹 Force separation from other projects
+      dbName: 'MathGameDB'
     });
     isConnected = db.connections[0].readyState === 1;
     console.log("Connected to Mongo Atlas ✅");
   } catch (err) {
     console.log("Mongo connect error ❌:", err.message);
-    throw err; // Let the handler catch it
+    throw err;
   }
 };
 
@@ -52,9 +51,6 @@ app.use(async (req, res, next) => {
 
 // 🔹 API Router
 const api = express.Router();
-
-// Delete ensureDb function and usage since middleware handles it
-// ... (rest of the routes without ensureDb calls)
 
 // 🔹 User Stats (Unified)
 api.post("/user/stats", async (req, res) => {
@@ -77,7 +73,6 @@ api.post("/user/stats", async (req, res) => {
 // 🔹 Login Check
 api.post("/check-login", async (req, res) => {
   try {
-    // DB guaranteed by middleware
     const { username, password } = req.body || {};
     if (!username || !password) {
       return res.status(400).json({ error: "חסר שם משתמש או סיסמה" });
@@ -94,7 +89,6 @@ api.post("/check-login", async (req, res) => {
 // 🔹 Register
 api.post("/register", async (req, res) => {
   try {
-    // DB guaranteed by middleware
     const { username, password, age } = req.body || {};
     if (!username || !password || age === undefined) {
       return res.status(400).json({ success: false, error: "חסר שם משתמש / סיסמה / גיל" });
@@ -111,6 +105,46 @@ api.post("/register", async (req, res) => {
     return res.json({ success: true, id: user._id });
   } catch (err) {
     return res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// 🔹 Shop Buy Endpoint
+api.post("/shop/buy", async (req, res) => {
+  try {
+    const { username, itemCost, itemName } = req.body;
+    if (!username || !itemCost || !itemName) {
+      return res.status(400).json({ ok: false, error: "MISSING_DATA" });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+
+    // Calc total score
+    const totalScore = (user.addition || 0) +
+      (user.subtraction || 0) +
+      (user.multiplication || 0) +
+      (user.division || 0) +
+      (user.percent || 0);
+
+    const available = totalScore - (user.spentPoints || 0);
+
+    if (available < itemCost) {
+      return res.status(400).json({ ok: false, error: "NOT_ENOUGH_POINTS" });
+    }
+
+    if (user.inventory.includes(itemName)) {
+      return res.status(400).json({ ok: false, error: "ALREADY_OWNED" });
+    }
+
+    user.spentPoints = (user.spentPoints || 0) + itemCost;
+    user.inventory.push(itemName);
+    await user.save();
+
+    return res.json({ ok: true, inventory: user.inventory, balance: available - itemCost });
+
+  } catch (err) {
+    console.error("Shop buy error:", err);
+    return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
   }
 });
 
@@ -140,42 +174,18 @@ scoreFields.forEach(field => {
       res.status(500).json({ ok: false, error: "SERVER_ERROR" });
     }
   });
-
-  // 🔹 Get Field Frequency (e.g. addition_f)
-  api.get(`/user/${field}-f`, async (req, res) => {
-    try {
-      const { username } = req.query;
-      if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
-      const user = await User.findOne({ username }, { password: 0 });
-      if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
-      const key = `${field}_f`;
-      return res.json({ ok: true, [key]: user[key] ?? 1 });
-    } catch (e) {
-      console.log("ERR:", e);
-      return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
-    }
-  });
 });
 
 // 🔹 Debug Ping
 api.get("/ping", (req, res) => res.json({ msg: "pong", time: new Date() }));
-api.get("/test", (req, res) => res.send("Typescript Test works via Express!"));
 
-// ✅ Mount API Router (HANDLE BOTH /api and / for Vercel robustness)
+// ✅ Mount API Router
 app.use("/api", api);
-app.use("/", api); // Fallback if prefix is stripped
+app.use("/", api); // Fallback
 
-// ❌ 404 Handler (Force JSON response)
+// ❌ 404 Handler
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found in Express", path: req.path });
 });
 
 export default app;
-
-// Only start server dev locally
-if (process.argv[1] === new URL(import.meta.url).pathname) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}

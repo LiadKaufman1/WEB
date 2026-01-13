@@ -11,6 +11,10 @@ const UserSchema = new mongoose.Schema({
   multiplication: { type: Number, default: 0 },
   division: { type: Number, default: 0 },
   percent: { type: Number, default: 0 },
+
+  // Shop
+  spentPoints: { type: Number, default: 0 },
+  inventory: { type: [String], default: [] }
 });
 
 // Prevent overwrite in serverless

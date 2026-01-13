@@ -6,6 +6,13 @@ const API = API_URL;
 const SILVER = 30;
 const GOLD = 60;
 
+const SHOP_ITEMS = [
+  { id: "medal_gold_real", name: "מדליית זהב אמיתית 🥇", cost: 100, emoji: "🥇" },
+  { id: "cat_boots", name: "החתול במגפיים 👢", cost: 200, emoji: "👢" },
+  { id: "wisdom_potion", name: "שיקוי חוכמה 🧪", cost: 50, emoji: "🧪" },
+  { id: "crown", name: "כתר המלך 👑", cost: 500, emoji: "👑" },
+];
+
 function getMedal(value) {
   const v = Number(value || 0);
   if (v >= GOLD) {
@@ -36,6 +43,7 @@ export default function Stats() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [err, setErr] = useState("");
+  const [buying, setBuying] = useState(null);
 
   async function loadStats() {
     console.log("Fetching stats from:", `${API}/user/stats`);
@@ -43,8 +51,6 @@ export default function Stats() {
     setLoading(true);
 
     const username = localStorage.getItem("username");
-    console.log("Username for stats:", username);
-
     if (!username) {
       setErr("לא נמצא שם משתמש. נא להתחבר מחדש.");
       setLoading(false);
@@ -58,11 +64,7 @@ export default function Stats() {
         body: JSON.stringify({ username }),
       });
 
-      console.log("Stats Response Status:", res.status);
-
       const text = await res.text();
-      console.log("Stats Response Body:", text); // Debugging
-
       let data;
       try {
         data = JSON.parse(text);
@@ -85,9 +87,47 @@ export default function Stats() {
     }
   }
 
+  async function buyItem(item) {
+    const username = localStorage.getItem("username");
+    if (!username) return;
+
+    if (window.confirm(`האם אתה רוצה לקנות ${item.name} ב-${item.cost} נקודות?`)) {
+      setBuying(item.id);
+      try {
+        const res = await fetch(`${API}/shop/buy`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, itemCost: item.cost, itemName: item.id })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          alert(`תתחדש! קנית ${item.name}`);
+          loadStats(); // Reload to update balance
+        } else {
+          if (data.error === "NOT_ENOUGH_POINTS") alert("אין לך מספיק נקודות 😔");
+          else if (data.error === "ALREADY_OWNED") alert("כבר יש לך את זה! 🤓");
+          else alert("שגיאה בקנייה: " + data.error);
+        }
+      } catch (e) {
+        alert("שגיאת תקשורת");
+      } finally {
+        setBuying(null);
+      }
+    }
+  }
+
   useEffect(() => {
     loadStats();
   }, []);
+
+  const totalPoints = useMemo(() => {
+    if (!stats) return 0;
+    return (stats.addition || 0) + (stats.subtraction || 0) + (stats.multiplication || 0) + (stats.division || 0) + (stats.percent || 0);
+  }, [stats]);
+
+  const spent = stats?.spentPoints || 0;
+  const balance = totalPoints - spent;
+  const inventory = stats?.inventory || [];
 
   const rows = useMemo(() => {
     const s = stats || {};
@@ -113,7 +153,8 @@ export default function Stats() {
               <span className="text-3xl">🏆</span>
             </h2>
             <p className="mt-2 text-slate-500 font-medium">
-              אסוף מדליות בכל נושא: <span className="font-bold text-slate-700">30 נק' = כסף</span>, <span className="font-bold text-amber-600">60 נק' = זהב</span>
+              סה"כ נקודות: <span className="font-bold text-blue-600 text-lg">{totalPoints}</span> |
+              יתרה לקניות: <span className="font-bold text-emerald-600 text-lg">{balance} 💰</span>
             </p>
           </div>
 
@@ -137,22 +178,52 @@ export default function Stats() {
             טוען נתונים...
           </div>
         ) : stats ? (
-          <div className="grid gap-6">
-            {/* Summary Card */}
-            <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 p-6">
-              <h3 className="text-xl font-bold text-slate-800 mb-2">סיכום התקדמות 📊</h3>
-              <p className="text-slate-600 leading-relaxed">
-                אספת עד כה <b>{silverCount}</b> מדליות כסף 🥈 ו-<b>{goldCount}</b> מדליות זהב 🥇.
-                תמשיך לתרגל כדי להשיג עוד!
-              </p>
+          <div className="grid gap-8">
+            {/* Shop Section */}
+            <div className="rounded-3xl bg-amber-50 border border-amber-100 p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-full blur-3xl opacity-50 -mr-10 -mt-10 pointer-events-none"></div>
+              <h3 className="text-2xl font-black text-amber-900 mb-4 relative z-10 flex items-center gap-2">
+                <span>🛍️</span> חנות ההפתעות
+              </h3>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
+                {SHOP_ITEMS.map(item => {
+                  const owned = inventory.includes(item.id);
+                  const canBuy = balance >= item.cost;
+                  return (
+                    <div key={item.id} className={`bg-white p-4 rounded-xl border-2 transition-all text-center flex flex-col items-center gap-2 ${owned ? 'border-emerald-200 opacity-80' : 'border-amber-200 shadow-sm hover:scale-105'}`}>
+                      <div className="text-4xl mb-2">{item.emoji}</div>
+                      <div className="font-bold text-slate-800 text-sm">{item.name}</div>
+
+                      {owned ? (
+                        <div className="bg-emerald-100 text-emerald-700 text-xs py-1 px-3 rounded-full font-bold mt-auto">
+                          שלך! ✅
+                        </div>
+                      ) : (
+                        <button
+                          disabled={!canBuy || buying === item.id}
+                          onClick={() => buyItem(item)}
+                          className={`mt-auto text-xs py-1.5 px-3 rounded-lg font-bold w-full transition-all ${canBuy ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200 shadow-md' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                        >
+                          {buying === item.id ? '...' : `קנה ב-${item.cost}`}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-1">
-              {rows.map((r) => (
-                <ScoreRow key={r.key} {...r} />
-              ))}
+            {/* Existing Stats Grid */}
+            <div>
+              <h3 className="text-xl font-bold text-slate-800 mb-4">המצב שלי במקצועות 📊</h3>
+              <div className="grid gap-4 md:grid-cols-1">
+                {rows.map((r) => (
+                  <ScoreRow key={r.key} {...r} />
+                ))}
+              </div>
             </div>
+
           </div>
         ) : (
           <div className="py-12 text-center text-slate-400">אין נתונים זמינים.</div>
