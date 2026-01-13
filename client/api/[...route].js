@@ -29,7 +29,8 @@ const connectToDatabase = async () => {
   try {
     const db = await mongoose.connect(MONGO_URI, {
       // Optional: Add timeouts if needed
-      serverSelectionTimeoutMS: 5000
+      serverSelectionTimeoutMS: 5000,
+      dbName: 'MathGameDB' // 🔹 Force separation from other projects
     });
     isConnected = db.connections[0].readyState === 1;
     console.log("Connected to Mongo Atlas ✅");
