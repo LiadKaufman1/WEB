@@ -149,8 +149,14 @@ app.use((req, res) => {
 
 module.exports = app;
 
+// ... (Keep existing code)
+
+// Only start server dev locally
 if (require.main === module) {
-  app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
+
+module.exports = app;
