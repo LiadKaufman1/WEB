@@ -4,18 +4,18 @@ import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
 import API_URL from "../config";
 
-const PERCENT_STATE_KEY = "percent_practice_state_v1";
+const PERCENT_STATE_KEY = "percent_practice_state_v2";
 const API_BASE = API_URL;
 
 const LEVELS = {
-  easy: { label: "מתחילים (קל מאוד)", minBase: 10, maxBase: 200 },
-  medium: { label: "מתקדמים (קל)", minBase: 10, maxBase: 400 },
-  hard: { label: "אלופים (עדיין לילדים)", minBase: 10, maxBase: 600 },
+  easy: { label: "קל (קל מאוד)", minBase: 10, maxBase: 200, points: 1 },
+  medium: { label: "בינוני (רגיל)", minBase: 10, maxBase: 400, points: 3 },
+  hard: { label: "קשה (לילדים)", minBase: 10, maxBase: 600, points: 5 },
 };
 
 const LEVEL_TEXT = {
   easy: {
-    title: "מתחילים 😺",
+    title: "רמה קלה 😺 (1 נק')",
     body:
       "אחוזים זה 'כמה מתוך 100'.\n" +
       "חישובים סופר קלים:\n" +
@@ -24,7 +24,7 @@ const LEVEL_TEXT = {
       "טיפ של מתי: קודם עושים 10/25/50 ואז ממשיכים 🐾",
   },
   medium: {
-    title: "מתקדמים 🐾",
+    title: "רמה בינונית 🐾 (3 נק')",
     body:
       "עכשיו מוסיפים עוד אחוזים קלים.\n" +
       "5% זה חצי של 10%.\n" +
@@ -33,7 +33,7 @@ const LEVEL_TEXT = {
       "טיפ של מתי: תחשוב בחתיכות קטנות 😺",
   },
   hard: {
-    title: "אלופים 🐯",
+    title: "רמה קשה 🐯 (5 נק')",
     body:
       "פה עושים אחוזים קצת יותר 'חכמים', אבל עדיין פשוטים.\n" +
       "1% = לחלק ב־100.\n" +
@@ -49,27 +49,6 @@ function randInt(min, max) {
 }
 function randChoice(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function levelFromPercentF(percent_f) {
-  const n = Number(percent_f ?? 1);
-  if (!Number.isFinite(n) || n <= 1) return "easy";
-  if (n === 2) return "medium";
-  return "hard";
-}
-
-async function fetchPercentF(username) {
-  try {
-    const res = await fetch(
-      `${API_BASE}/user/percent-f?username=${encodeURIComponent(username)}`
-    );
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data?.ok) return null;
-    const n = Number(data.percent_f);
-    return Number.isFinite(n) ? n : null;
-  } catch {
-    return null;
-  }
 }
 
 function makeQuestion(levelKey) {
@@ -139,7 +118,7 @@ export default function PracticePercent() {
     if (saved) {
       try {
         const st = JSON.parse(saved);
-        if (st?.level) setLevel(st.level);
+        if (st?.level && LEVELS[st.level]) setLevel(st.level);
         if (st?.q) setQ(st.q);
         if (typeof st?.input === "string") setInput(st.input);
         if (typeof st?.msg === "string") setMsg(st.msg);
@@ -157,20 +136,11 @@ export default function PracticePercent() {
     }
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      if (sessionStorage.getItem(PERCENT_STATE_KEY)) return;
-      const username = localStorage.getItem("username");
-      if (!username) return;
-      const f = await fetchPercentF(username);
-      const newLevel = levelFromPercentF(f);
-      setLevel(newLevel);
-      setQ(makeQuestion(newLevel));
-      setInput("");
-      setMsg("");
-      setNoPointsThisQuestion(false);
-    })();
-  }, []);
+  function changeLevel(newLevel) {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setLevel(newLevel);
+    goNextQuestion(newLevel);
+  }
 
   function goNextQuestion(nextLevel = level) {
     if (timerRef.current) {
@@ -184,6 +154,7 @@ export default function PracticePercent() {
     setInput("");
     setNoPointsThisQuestion(false);
     setQ(makeQuestion(nextLevel));
+    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" }); // Save state immediately
   }
 
   function goStory() {
@@ -200,11 +171,14 @@ export default function PracticePercent() {
     if (noPointsThisQuestion) return;
     const username = localStorage.getItem("username");
     if (!username) return;
+
+    const points = LEVELS[level]?.points || 1;
+
     try {
       await fetch(`${API_BASE}/score/percent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username, points }),
       });
     } catch {
       // ignore
@@ -221,9 +195,10 @@ export default function PracticePercent() {
     }
 
     if (val === q.ans) {
+      const earned = LEVELS[level]?.points || 1;
       const m = noPointsThisQuestion
         ? "✅ נכון! (ללא נקודות כי השתמשת בסיפור)"
-        : "✅ נכון!";
+        : `✅ נכון! הרווחת ${earned} נקודות!`;
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -231,7 +206,7 @@ export default function PracticePercent() {
       incPercentScoreIfAllowed();
 
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => goNextQuestion(level), 1000);
+      timerRef.current = setTimeout(() => goNextQuestion(level), 1500);
       return;
     }
 
@@ -255,11 +230,20 @@ export default function PracticePercent() {
       <div className="card p-6 md:p-8">
         <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">תרגול אחוזים ％</h2>
 
-        <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
-          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">רמה נוכחית</span>
-          <span className="text-lg font-extrabold text-blue-600">
-            {level === "easy" ? "מתחילים 😺" : level === "medium" ? "מתקדמים 🐾" : "אלופים 🐯"}
-          </span>
+        {/* Level Selection */}
+        <div className="grid grid-cols-3 gap-2 mb-8 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+          {Object.keys(LEVELS).map((lvlKey) => (
+            <button
+              key={lvlKey}
+              onClick={() => changeLevel(lvlKey)}
+              className={`py-2 rounded-xl text-sm font-bold transition-all ${level === lvlKey
+                  ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                }`}
+            >
+              {lvlKey === "easy" ? "קל 😺" : lvlKey === "medium" ? "בינוני 🐾" : "קשה 🐯"}
+            </button>
+          ))}
         </div>
 
         {/* Question display */}

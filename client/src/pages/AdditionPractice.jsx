@@ -4,18 +4,18 @@ import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
 import API_URL from "../config";
 
-const ADD_STATE_KEY = "addition_practice_state_v1";
+const ADD_STATE_KEY = "addition_practice_state_v2"; // v2 for new difficulty logic support
 const API_BASE = API_URL;
 
 const LEVELS = {
-  easy: { label: "מתחילים (0–10)", min: 0, max: 10 },
-  medium: { label: "מתקדמים (0–50)", min: 0, max: 50 },
-  hard: { label: "אלופים (0–200)", min: 0, max: 200 },
+  easy: { label: "קל (0–10)", min: 0, max: 10, points: 1 },
+  medium: { label: "בינוני (0–50)", min: 0, max: 50, points: 3 },
+  hard: { label: "קשה (0–200)", min: 0, max: 200, points: 5 },
 };
 
 const LEVEL_TEXT = {
   easy: {
-    title: "רמה קלה 😺",
+    title: "רמה קלה 😺 (1 נק')",
     body:
       "פה אנחנו עושים חיבור כמו שהחתול אוהב: רגוע וברור.\n" +
       "מתחילים מהמספר הראשון.\n" +
@@ -24,7 +24,7 @@ const LEVEL_TEXT = {
       "טיפ של חתול: אם יש 0 — לא מוסיפים כלום 😸",
   },
   medium: {
-    title: "רמה בינונית 🐾",
+    title: "רמה בינונית 🐾 (3 נק')",
     body:
       "כאן החתול כבר משתמש בטריק קטן וחכם.\n" +
       "במקום לספור הרבה צעדים, מגיעים למספר עגול.\n" +
@@ -34,7 +34,7 @@ const LEVEL_TEXT = {
       "טיפ של חתול: מספרים עגולים הם הכי נוחים 🐾",
   },
   hard: {
-    title: "רמה קשה 🐯",
+    title: "רמה קשה 🐯 (5 נק')",
     body:
       "זו רמה לחתולים רציניים במיוחד.\n" +
       "כדי לא להתבלבל, מפרקים את המספרים לחלקים.\n" +
@@ -55,27 +55,6 @@ function makeQuestion(levelKey) {
   const a = randInt(min, max);
   const b = randInt(min, max);
   return { a, b, ans: a + b };
-}
-
-function levelFromAdditionF(addition_f) {
-  const n = Number(addition_f ?? 1);
-  if (!Number.isFinite(n) || n <= 1) return "easy";
-  if (n === 2) return "medium";
-  return "hard";
-}
-
-async function fetchAdditionF(username) {
-  try {
-    const res = await fetch(
-      `${API_BASE}/user/addition-f?username=${encodeURIComponent(username)}`
-    );
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data?.ok) return null;
-    const n = Number(data.addition_f);
-    return Number.isFinite(n) ? n : null;
-  } catch {
-    return null;
-  }
 }
 
 export default function PracticeAddition() {
@@ -108,7 +87,7 @@ export default function PracticeAddition() {
     if (saved) {
       try {
         const st = JSON.parse(saved);
-        if (st?.level) setLevel(st.level);
+        if (st?.level && LEVELS[st.level]) setLevel(st.level);
         if (st?.q) setQ(st.q);
         if (typeof st?.input === "string") setInput(st.input);
         if (typeof st?.msg === "string") setMsg(st.msg);
@@ -126,20 +105,11 @@ export default function PracticeAddition() {
     }
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      if (sessionStorage.getItem(ADD_STATE_KEY)) return;
-      const username = localStorage.getItem("username");
-      if (!username) return;
-      const f = await fetchAdditionF(username);
-      const newLevel = levelFromAdditionF(f);
-      setLevel(newLevel);
-      setQ(makeQuestion(newLevel));
-      setInput("");
-      setMsg("");
-      setNoPointsThisQuestion(false);
-    })();
-  }, []);
+  function changeLevel(newLevel) {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setLevel(newLevel);
+    goNextQuestion(newLevel);
+  }
 
   function goNextQuestion(nextLevel = level) {
     if (timerRef.current) {
@@ -153,6 +123,7 @@ export default function PracticeAddition() {
     setInput("");
     setNoPointsThisQuestion(false);
     setQ(makeQuestion(nextLevel));
+    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" }); // Save new state immediately
   }
 
   function goStory() {
@@ -169,11 +140,14 @@ export default function PracticeAddition() {
     if (noPointsThisQuestion) return;
     const username = localStorage.getItem("username");
     if (!username) return;
+
+    const points = LEVELS[level]?.points || 1;
+
     try {
       await fetch(`${API_BASE}/score/addition`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username, points }),
       });
     } catch {
       // ignore
@@ -190,9 +164,10 @@ export default function PracticeAddition() {
     }
 
     if (val === q.ans) {
+      const earned = LEVELS[level]?.points || 1;
       const m = noPointsThisQuestion
         ? "✅ נכון! (ללא נקודות כי השתמשת בסיפור)"
-        : "✅ נכון!";
+        : `✅ נכון! הרווחת ${earned} נקודות!`;
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -200,7 +175,7 @@ export default function PracticeAddition() {
       incAdditionScoreIfAllowed();
 
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => goNextQuestion(level), 1000);
+      timerRef.current = setTimeout(() => goNextQuestion(level), 1500); // Slightly longer delay to read msg
       return;
     }
 
@@ -224,11 +199,20 @@ export default function PracticeAddition() {
       <div className="card p-6 md:p-8">
         <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">תרגול חיבור ➕</h2>
 
-        <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
-          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">רמה נוכחית</span>
-          <span className="text-lg font-extrabold text-blue-600">
-            {level === "easy" ? "מתחילים 😺" : level === "medium" ? "מתקדמים 🐾" : "אלופים 🐯"}
-          </span>
+        {/* Level Selection */}
+        <div className="grid grid-cols-3 gap-2 mb-8 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+          {Object.keys(LEVELS).map((lvlKey) => (
+            <button
+              key={lvlKey}
+              onClick={() => changeLevel(lvlKey)}
+              className={`py-2 rounded-xl text-sm font-bold transition-all ${level === lvlKey
+                  ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                }`}
+            >
+              {lvlKey === "easy" ? "קל 😺" : lvlKey === "medium" ? "בינוני 🐾" : "קשה 🐯"}
+            </button>
+          ))}
         </div>
 
         {/* Question Display */}

@@ -120,11 +120,12 @@ const scoreFields = ["addition", "subtraction", "multiplication", "division", "p
 scoreFields.forEach(field => {
   api.post(`/score/${field}`, async (req, res) => {
     try {
-      const { username } = req.body;
+      const { username, points } = req.body;
       if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
 
+      const pointsToAdd = typeof points === "number" && points > 0 ? points : 1;
       const update = { $inc: {} };
-      update.$inc[field] = 1;
+      update.$inc[field] = pointsToAdd;
 
       const user = await User.findOneAndUpdate(
         { username },

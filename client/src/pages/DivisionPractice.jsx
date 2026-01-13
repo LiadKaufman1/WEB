@@ -4,18 +4,18 @@ import useCatCongrats from "./useCatCongrats.jsx";
 import useCatUncongrats from "./useCatUncongrats.jsx";
 import API_URL from "../config";
 
-const DIV_STATE_KEY = "division_practice_state_v1";
+const DIV_STATE_KEY = "division_practice_state_v2";
 const API_BASE = API_URL;
 
 const LEVELS = {
-  beginners: { label: "מתחילים (2–5)", minDivisor: 2, maxDivisor: 5, maxAnswer: 10 },
-  advanced: { label: "מתקדמים (2–10)", minDivisor: 2, maxDivisor: 10, maxAnswer: 12 },
-  champs: { label: "אלופים (2–12)", minDivisor: 2, maxDivisor: 12, maxAnswer: 15 },
+  beginners: { label: "קל (2–5)", minDivisor: 2, maxDivisor: 5, maxAnswer: 10, points: 1 },
+  advanced: { label: "בינוני (2–10)", minDivisor: 2, maxDivisor: 10, maxAnswer: 12, points: 3 },
+  champs: { label: "קשה (2–12)", minDivisor: 2, maxDivisor: 12, maxAnswer: 15, points: 5 },
 };
 
 const LEVEL_TEXT = {
   beginners: {
-    title: "מתחילים 😺",
+    title: "רמה קלה 😺 (1 נק')",
     body:
       "מתי החתול מסביר שחילוק זה 'לחלק שווה בשווה'.\n" +
       "לוקחים מספר גדול (עוגיות 🍪).\n" +
@@ -25,7 +25,7 @@ const LEVEL_TEXT = {
       "טיפ של מתי: אפשר לצייר עיגולים ולעשות קבוצות 🟣🟣🟣",
   },
   advanced: {
-    title: "מתקדמים 🐾",
+    title: "רמה בינונית 🐾 (3 נק')",
     body:
       "מתי החתול כבר יודע שחילוק קשור ללוח הכפל.\n" +
       "שואלים: 'איזה מספר כפול המחלק נותן את המחולק?'\n" +
@@ -34,7 +34,7 @@ const LEVEL_TEXT = {
       "טיפ של מתי: לחשוב על כפל עושה חילוק מהיר 🐾",
   },
   champs: {
-    title: "אלופים 🐯",
+    title: "רמה קשה 🐯 (5 נק')",
     body:
       "רמה של אלופים אמיתיים.\n" +
       "מתי החתול משתמש בטריקים חכמים ופירוקים.\n" +
@@ -54,27 +54,6 @@ function makeQuestion(levelKey) {
   const ans = randInt(1, cfg.maxAnswer); // keep answer >= 1
   const a = b * ans; // dividend
   return { a, b, ans };
-}
-
-function levelFromDivisionF(division_f) {
-  const n = Number(division_f ?? 1);
-  if (!Number.isFinite(n) || n <= 1) return "beginners";
-  if (n === 2) return "advanced";
-  return "champs";
-}
-
-async function fetchDivisionF(username) {
-  try {
-    const res = await fetch(
-      `${API_BASE}/user/division-f?username=${encodeURIComponent(username)}`
-    );
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data?.ok) return null;
-    const n = Number(data.division_f);
-    return Number.isFinite(n) ? n : null;
-  } catch {
-    return null;
-  }
 }
 
 export default function PracticeDivision() {
@@ -107,7 +86,7 @@ export default function PracticeDivision() {
     if (saved) {
       try {
         const st = JSON.parse(saved);
-        if (st?.level) setLevel(st.level);
+        if (st?.level && LEVELS[st.level]) setLevel(st.level);
         if (st?.q) setQ(st.q);
         if (typeof st?.input === "string") setInput(st.input);
         if (typeof st?.msg === "string") setMsg(st.msg);
@@ -125,20 +104,11 @@ export default function PracticeDivision() {
     }
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      if (sessionStorage.getItem(DIV_STATE_KEY)) return;
-      const username = localStorage.getItem("username");
-      if (!username) return;
-      const f = await fetchDivisionF(username);
-      const newLevel = levelFromDivisionF(f);
-      setLevel(newLevel);
-      setQ(makeQuestion(newLevel));
-      setInput("");
-      setMsg("");
-      setNoPointsThisQuestion(false);
-    })();
-  }, []);
+  function changeLevel(newLevel) {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setLevel(newLevel);
+    goNextQuestion(newLevel);
+  }
 
   function goNextQuestion(nextLevel = level) {
     if (timerRef.current) {
@@ -152,6 +122,7 @@ export default function PracticeDivision() {
     setInput("");
     setNoPointsThisQuestion(false);
     setQ(makeQuestion(nextLevel));
+    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" });
   }
 
   function goStory() {
@@ -168,11 +139,14 @@ export default function PracticeDivision() {
     if (noPointsThisQuestion) return;
     const username = localStorage.getItem("username");
     if (!username) return;
+
+    const points = LEVELS[level]?.points || 1;
+
     try {
       await fetch(`${API_BASE}/score/division`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username, points }),
       });
     } catch {
       // ignore
@@ -189,9 +163,10 @@ export default function PracticeDivision() {
     }
 
     if (val === q.ans) {
+      const earned = LEVELS[level]?.points || 1;
       const m = noPointsThisQuestion
         ? "✅ נכון! (ללא נקודות כי השתמשת בסיפור)"
-        : "✅ נכון!";
+        : `✅ נכון! הרווחת ${earned} נקודות!`;
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -199,7 +174,7 @@ export default function PracticeDivision() {
       incDivisionScoreIfAllowed();
 
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => goNextQuestion(level), 1000);
+      timerRef.current = setTimeout(() => goNextQuestion(level), 1500);
       return;
     }
 
@@ -223,11 +198,20 @@ export default function PracticeDivision() {
       <div className="card p-6 md:p-8">
         <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">תרגול חילוק ➗</h2>
 
-        <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
-          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">רמה נוכחית</span>
-          <span className="text-lg font-extrabold text-blue-600">
-            {level === "beginners" ? "מתחילים 😺" : level === "advanced" ? "מתקדמים 🐾" : "אלופים 🐯"}
-          </span>
+        {/* Level Selection */}
+        <div className="grid grid-cols-3 gap-2 mb-8 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+          {Object.keys(LEVELS).map((lvlKey) => (
+            <button
+              key={lvlKey}
+              onClick={() => changeLevel(lvlKey)}
+              className={`py-2 rounded-xl text-sm font-bold transition-all ${level === lvlKey
+                  ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                }`}
+            >
+              {lvlKey === "beginners" ? "קל 😺" : lvlKey === "advanced" ? "בינוני 🐾" : "קשה 🐯"}
+            </button>
+          ))}
         </div>
 
         {/* Question Display */}

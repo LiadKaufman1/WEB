@@ -1,9 +1,12 @@
 {
-    "outputDirectory": "dist",
     "rewrites": [
         {
+            "source": "/api/(.*)",
+            "destination": "/client/api/$1"
+        },
+        {
             "source": "/((?!api/.*).*)",
-            "destination": "/index.html"
+            "destination": "/client/index.html"
         }
     ]
 }
