@@ -1,7 +1,7 @@
-import { Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { Routes, Route, NavLink, Navigate, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import logo from "../logo.svg"; // ✅ client/logo.svg
+import logo from "../logo.svg";
 
 import CheckTest1 from "./CheckTest1.jsx";
 import Register from "./pages/Register.jsx";
@@ -12,7 +12,7 @@ import AdditionPractice from "./pages/AdditionPractice.jsx";
 import SubtractionPractice from "./pages/SubtractionPractice.jsx";
 import MultiplicationPractice from "./pages/MultiplicationPractice.jsx";
 import DivisionPractice from "./pages/DivisionPractice.jsx";
-import PracticePercent from "./pages/PracticePercent.jsx"; // ✅ NEW: Percent page
+import PracticePercent from "./pages/PracticePercent.jsx";
 
 import CatStory from "./pages/CatStory.jsx";
 
@@ -66,6 +66,7 @@ function PublicOnlyRoute({ children }) {
 
 export default function App() {
   const [authed, setAuthed] = useState(() => isLoggedIn());
+  const navigate = useNavigate();
 
   useEffect(() => {
     function onAuthChanged() {
@@ -74,6 +75,15 @@ export default function App() {
     window.addEventListener("auth-changed", onAuthChanged);
     return () => window.removeEventListener("auth-changed", onAuthChanged);
   }, []);
+
+  function handleLogout() {
+    if (window.confirm("בטוח שרוצים לצאת? 🚪")) {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("username");
+      window.dispatchEvent(new Event("auth-changed"));
+      navigate("/login");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-emerald-50 to-amber-50">
@@ -101,7 +111,7 @@ export default function App() {
                   <div className="text-lg font-black text-slate-900">
                     מתי החתול
                     <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-extrabold text-amber-700">
-                      חשבון בקלות 
+                      חשבון בקלות
                     </span>
                   </div>
 
@@ -143,13 +153,21 @@ export default function App() {
                 <Tab to="/division" emoji="➗">
                   חילוק
                 </Tab>
-                {/* ✅ REPLACED: RAG Chat -> Percent */}
                 <Tab to="/percent" emoji="📊">
                   אחוזים
                 </Tab>
                 <Tab to="/about" emoji="ℹ️">
                   אודות
                 </Tab>
+
+                {/* 🚪 Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-extrabold transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 bg-white/60 text-rose-600 hover:bg-rose-50 hover:text-rose-700 ring-1 ring-rose-200/60"
+                >
+                  <span className="text-base">🚪</span>
+                  <span className="whitespace-nowrap">יציאה</span>
+                </button>
               </nav>
             )}
           </div>
@@ -227,7 +245,6 @@ export default function App() {
               }
             />
 
-            {/* ✅ NEW: Percent practice */}
             <Route
               path="/percent"
               element={
