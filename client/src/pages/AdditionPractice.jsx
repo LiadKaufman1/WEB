@@ -4,7 +4,7 @@ import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
 import API_URL from "../config";
 
-const ADD_STATE_KEY = "addition_practice_state_v2"; // v2 for new difficulty logic support
+const ADD_STATE_KEY = "addition_practice_state_v2";
 const API_BASE = API_URL;
 
 const LEVELS = {
@@ -68,13 +68,13 @@ export default function PracticeAddition() {
   const [q, setQ] = useState(() => makeQuestion("easy"));
   const [input, setInput] = useState("");
   const [msg, setMsg] = useState("");
-  const [story, setStory] = useState("");
+  const [showHint, setShowHint] = useState(false);
   const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
 
   function savePracticeState(next = {}) {
     sessionStorage.setItem(
       ADD_STATE_KEY,
-      JSON.stringify({ level, q, input, msg, noPointsThisQuestion, ...next })
+      JSON.stringify({ level, q, input, msg, noPointsThisQuestion, showHint, ...next })
     );
   }
 
@@ -93,15 +93,10 @@ export default function PracticeAddition() {
         if (typeof st?.msg === "string") setMsg(st.msg);
         if (typeof st?.noPointsThisQuestion === "boolean")
           setNoPointsThisQuestion(st.noPointsThisQuestion);
+        if (typeof st?.showHint === "boolean") setShowHint(st.showHint);
       } catch {
         // ignore
       }
-    }
-
-    const s = sessionStorage.getItem("cat_story_text");
-    if (s) {
-      setStory(s);
-      sessionStorage.removeItem("cat_story_text");
     }
   }, []);
 
@@ -117,23 +112,35 @@ export default function PracticeAddition() {
       timerRef.current = null;
     }
     clearPracticeState();
-    setStory("");
-    sessionStorage.removeItem("cat_story_text");
     setMsg("");
     setInput("");
+    setShowHint(false);
     setNoPointsThisQuestion(false);
     setQ(makeQuestion(nextLevel));
-    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" }); // Save new state immediately
+    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "", showHint: false });
   }
 
-  function goStory() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    setNoPointsThisQuestion(true);
-    savePracticeState({ noPointsThisQuestion: true });
-    navigate("/cat-story", { state: { a: q.a, b: q.b, op: "+" } });
+  function toggleHint() {
+    // If opening hint for first time, mark no points
+    // if (!showHint) {
+    //   setNoPointsThisQuestion(true);
+    //   savePracticeState({ noPointsThisQuestion: true, showHint: true });
+    // } else { ... }
+
+    // User requested just "Hint". Let's decide if it penalizes. 
+    // Usually hints penalize or reduce score. User said "replace story button".
+    // For now, let's NOT penalize strictly, or maybe just warn?
+    // Let's keep it friendly: No penalty for now, just help.
+    const nextState = !showHint;
+    setShowHint(nextState);
+    savePracticeState({ showHint: nextState });
+  }
+
+  function getHintText() {
+    // Generates a dynamic hint based on q.a and q.b
+    const max = Math.max(q.a, q.b);
+    const min = Math.min(q.a, q.b);
+    return `💡 טיפ: תתחיל מהמספר הגדול (${max}) ותוסיף לו ${min} צעדים.`;
   }
 
   async function incAdditionScoreIfAllowed() {
@@ -166,7 +173,7 @@ export default function PracticeAddition() {
     if (val === q.ans) {
       const earned = LEVELS[level]?.points || 1;
       const m = noPointsThisQuestion
-        ? "✅ נכון! (ללא נקודות כי השתמשת בסיפור)"
+        ? "✅ נכון! (ללא נקודות)" // If we decide to penalize later
         : `✅ נכון! הרווחת ${earned} נקודות!`;
       setMsg(m);
       savePracticeState({ msg: m });
@@ -175,7 +182,7 @@ export default function PracticeAddition() {
       incAdditionScoreIfAllowed();
 
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => goNextQuestion(level), 1500); // Slightly longer delay to read msg
+      timerRef.current = setTimeout(() => goNextQuestion(level), 1500);
       return;
     }
 
@@ -241,6 +248,13 @@ export default function PracticeAddition() {
           />
         </div>
 
+        {/* Hint Display */}
+        {showHint && (
+          <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 font-bold text-center animate-fade-in">
+            {getHintText()}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex flex-col gap-3">
           <button
@@ -252,11 +266,11 @@ export default function PracticeAddition() {
 
           <div className="flex gap-3">
             <button
-              onClick={goStory}
-              className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="מתי יספר סיפור על התרגיל"
+              onClick={toggleHint}
+              className="flex-1 py-3 font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+              title="קבל רמז"
             >
-              ספר סיפור 📖
+              <span>💡</span> רמז
             </button>
             <button
               onClick={() => goNextQuestion(level)}
@@ -284,16 +298,6 @@ export default function PracticeAddition() {
             {LEVEL_TEXT[level]?.body}
           </p>
         </div>
-
-        {/* Story Display */}
-        {story && (
-          <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
-            <h3 className="font-black text-amber-800 mb-2">הסיפור של מתי 😺</h3>
-            <pre className="whitespace-pre-wrap font-sans text-sm text-amber-900 leading-relaxed">
-              {story}
-            </pre>
-          </div>
-        )}
       </div>
     </div>
   );
