@@ -135,8 +135,17 @@ scoreFields.forEach(field => {
   });
 });
 
-// ✅ Mount API Router
+// 🔹 Debug Ping
+api.get("/ping", (req, res) => res.json({ msg: "pong", time: new Date() }));
+
+// ✅ Mount API Router (HANDLE BOTH /api and / for Vercel robustness)
 app.use("/api", api);
+app.use("/", api); // Fallback if prefix is stripped
+
+// ❌ 404 Handler (Force JSON response)
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found in Express", path: req.path });
+});
 
 module.exports = app;
 
