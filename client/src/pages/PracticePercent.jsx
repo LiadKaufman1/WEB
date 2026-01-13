@@ -2,46 +2,45 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
-
-const PERCENT_STATE_KEY = "percent_practice_state_v1";
 import API_URL from "../config";
 
+const PERCENT_STATE_KEY = "percent_practice_state_v1";
 const API_BASE = API_URL;
 
 const LEVELS = {
-  easy: { label: "מתחילים (קל מאוד)", minBase: 10, maxBase: 200 },
-  medium: { label: "מתקדמים (קל)", minBase: 10, maxBase: 400 },
-  hard: { label: "אלופים (עדיין לילדים)", minBase: 10, maxBase: 600 },
+  easy: { label: "Beginner (Very Easy)", minBase: 10, maxBase: 200 },
+  medium: { label: "Advanced (Easy)", minBase: 10, maxBase: 400 },
+  hard: { label: "Expert (Kid Friendly)", minBase: 10, maxBase: 600 },
 };
 
 const LEVEL_TEXT = {
   easy: {
-    title: "אחוזים למתחילים 😺",
+    title: "Level 1: Beginner 😺",
     body:
-      "אחוזים זה 'כמה מתוך 100'.\n" +
-      "חישובים סופר קלים:\n" +
-      "50% = חצי, 25% = רבע, 10% = לחלק ב־10.\n" +
-      "דוגמה: 25% מ־80 = 20.\n" +
-      "טיפ של מתי: קודם עושים 10/25/50 ואז ממשיכים 🐾",
+      "Percent means 'out of 100'.\n" +
+      "Super easy calculations:\n" +
+      "50% = half, 25% = quarter, 10% = divide by 10.\n" +
+      "Example: 25% of 80 = 20.\n" +
+      "Cat Tip: Try 10/25/50 first, then continue! 🐾",
   },
   medium: {
-    title: "אחוזים מתקדמים 🐾",
+    title: "Level 2: Advanced 🐾",
     body:
-      "עכשיו מוסיפים עוד אחוזים קלים.\n" +
-      "5% זה חצי של 10%.\n" +
-      "20% זה כפול מ־10%.\n" +
-      "דוגמה: 15% מ־200 = 10% (20) + 5% (10) = 30.\n" +
-      "טיפ של מתי: תחשוב בחתיכות קטנות 😺",
+      "Now we add some easy percents.\n" +
+      "5% is half of 10%.\n" +
+      "20% is double 10%.\n" +
+      "Example: 15% of 200 = 10% (20) + 5% (10) = 30.\n" +
+      "Cat Tip: Think in small pieces! 😺",
   },
   hard: {
-    title: "אחוזים לאלופים 🐯",
+    title: "Level 3: Expert 🐯",
     body:
-      "פה עושים אחוזים קצת יותר 'חכמים', אבל עדיין פשוטים.\n" +
-      "1% = לחלק ב־100.\n" +
-      "2% = פעמיים 1%.\n" +
-      "4% = כפול 2%.\n" +
-      "דוגמה: 4% מ־200 = 8.\n" +
-      "טיפ של מתי: תמיד אפשר לפרק אחוזים לחלקים 🧱",
+      "A bit smarter percents here but still simple.\n" +
+      "1% = divide by 100.\n" +
+      "2% = twice 1%.\n" +
+      "4% = double 2%.\n" +
+      "Example: 4% of 200 = 8.\n" +
+      "Cat Tip: You can always break percents down! 🧱",
   },
 };
 
@@ -52,9 +51,6 @@ function randChoice(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/**
- * 1 => easy, 2 => medium, 3+ => hard
- */
 function levelFromPercentF(percent_f) {
   const n = Number(percent_f ?? 1);
   if (!Number.isFinite(n) || n <= 1) return "easy";
@@ -62,10 +58,6 @@ function levelFromPercentF(percent_f) {
   return "hard";
 }
 
-/**
- * GET /user/percent-f?username=...
- * returns: { ok:true, percent_f:number }
- */
 async function fetchPercentF(username) {
   try {
     const res = await fetch(
@@ -80,11 +72,6 @@ async function fetchPercentF(username) {
   }
 }
 
-/**
- * Generate kid-friendly percent question with integer answer.
- * We pick percent "p" based on level.
- * Then we create base as (answer * 100) / p so the answer is always whole.
- */
 function makeQuestion(levelKey) {
   const lvl = levelKey || "easy";
 
@@ -96,7 +83,6 @@ function makeQuestion(levelKey) {
 
   const p = randChoice(PERCENTS_BY_LEVEL[lvl] || PERCENTS_BY_LEVEL.easy);
 
-  // Choose an answer (result) range per level (keep small)
   const ansRanges = {
     easy: { min: 1, max: 20 },
     medium: { min: 1, max: 40 },
@@ -105,11 +91,8 @@ function makeQuestion(levelKey) {
   const { min, max } = ansRanges[lvl] || ansRanges.easy;
   const ans = randInt(min, max);
 
-  // base must be integer: base = ans*100 / p
   let base = (ans * 100) / p;
 
-  // Ensure base is integer (it should be given our percent set)
-  // But just in case, retry a few times.
   let tries = 0;
   while (!Number.isInteger(base) && tries < 20) {
     const ans2 = randInt(min, max);
@@ -117,7 +100,6 @@ function makeQuestion(levelKey) {
     tries++;
   }
 
-  // Keep base not too huge (kid-friendly). If too big, reduce answer.
   if (base > 600) {
     const ansSmall = Math.max(1, Math.floor((600 * p) / 100));
     base = (ansSmall * 100) / p;
@@ -152,7 +134,6 @@ export default function PracticePercent() {
     sessionStorage.removeItem(PERCENT_STATE_KEY);
   }
 
-  // Restore state + story on mount
   useEffect(() => {
     const saved = sessionStorage.getItem(PERCENT_STATE_KEY);
     if (saved) {
@@ -176,17 +157,13 @@ export default function PracticePercent() {
     }
   }, []);
 
-  // Auto-level from percent_f (do not override if saved state exists)
   useEffect(() => {
     (async () => {
       if (sessionStorage.getItem(PERCENT_STATE_KEY)) return;
-
       const username = localStorage.getItem("username");
       if (!username) return;
-
       const f = await fetchPercentF(username);
       const newLevel = levelFromPercentF(f);
-
       setLevel(newLevel);
       setQ(makeQuestion(newLevel));
       setInput("");
@@ -216,17 +193,13 @@ export default function PracticePercent() {
     }
     setNoPointsThisQuestion(true);
     savePracticeState({ noPointsThisQuestion: true });
-
-    // Story screen should know it's percent question
     navigate("/cat-story", { state: { p: q.p, base: q.base, op: "%" } });
   }
 
   async function incPercentScoreIfAllowed() {
     if (noPointsThisQuestion) return;
-
     const username = localStorage.getItem("username");
     if (!username) return;
-
     try {
       await fetch(`${API_BASE}/score/percent`, {
         method: "POST",
@@ -234,15 +207,14 @@ export default function PracticePercent() {
         body: JSON.stringify({ username }),
       });
     } catch {
-      // silent fail
+      // ignore
     }
   }
 
   function checkAnswer() {
     const val = Number(input);
-
     if (input.trim() === "" || !Number.isFinite(val)) {
-      const m = "הקלד מספר";
+      const m = "Please type a number";
       setMsg(m);
       savePracticeState({ msg: m });
       return;
@@ -250,8 +222,8 @@ export default function PracticePercent() {
 
     if (val === q.ans) {
       const m = noPointsThisQuestion
-        ? "✅ נכון (בלי נקודות כי ביקשת סיפור)"
-        : "✅ נכון";
+        ? "✅ Correct! (No points because you used a story)"
+        : "✅ Correct!";
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -264,7 +236,7 @@ export default function PracticePercent() {
     }
 
     triggerBadCatFx();
-    const m = "❌ לא נכון";
+    const m = "❌ Incorrect, try again";
     setMsg(m);
     savePracticeState({ msg: m });
   }
@@ -276,109 +248,96 @@ export default function PracticePercent() {
   }, []);
 
   return (
-    <div
-      style={{
-        fontFamily: "Arial",
-        maxWidth: 420,
-        margin: "40px auto",
-        direction: "rtl",
-        textAlign: "right",
-        position: "relative",
-      }}
-    >
+    <div className="mx-auto max-w-lg mt-8 px-4">
       <CatCongrats />
       <CatUncongrats />
 
-      <h2>תרגול אחוזים</h2>
+      <div className="card p-6 md:p-8">
+        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">Percent Practice ％</h2>
 
-      <div className="mt-2 rounded-2xl bg-white p-3 ring-1 ring-slate-200">
-        <div className="text-xs font-bold text-slate-600">הרמה שלך:</div>
-        <div className="text-sm font-extrabold text-slate-900">
-          {level === "easy"
-            ? "מתחילים 😺"
-            : level === "medium"
-              ? "מתקדמים 🐾"
-              : "אלופים 🐯"}
-        </div>
-      </div>
-
-      {/* Question display */}
-      <div style={{ fontSize: 22, fontWeight: 900, margin: "16px 0", lineHeight: 1.4 }}>
-        כמה זה {q.p}% מתוך {q.base} ?
-      </div>
-
-      <input
-        value={input}
-        onChange={(e) => {
-          setInput(e.target.value);
-          savePracticeState({ input: e.target.value });
-        }}
-        placeholder="תשובה"
-        style={{ padding: 8, width: "100%", boxSizing: "border-box" }}
-      />
-
-      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-        <button onClick={checkAnswer}>בדוק</button>
-
-        <button
-          onClick={goStory}
-          style={{
-            background: "#fff",
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            padding: "6px 10px",
-          }}
-          title="מתי החתול יספר סיפור על התרגיל הזה"
-        >
-          ספר סיפור 😺
-        </button>
-
-        <button
-          onClick={() => goNextQuestion(level)}
-          style={{
-            background: "#0f172a",
-            color: "white",
-            border: "1px solid #0f172a",
-            borderRadius: 8,
-            padding: "6px 10px",
-          }}
-          title="עובר לתרגיל הבא ומנקה את הקודם"
-        >
-          תרגיל הבא ➜
-        </button>
-      </div>
-
-      {msg ? (
-        <div style={{ marginTop: 10, fontWeight: 800, color: "#0f172a" }}>
-          {msg}
-        </div>
-      ) : null}
-
-      <div className="mt-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-extrabold text-slate-900">
-            {LEVEL_TEXT[level]?.title ?? "הסבר לרמה"}
-          </p>
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
-            {LEVELS[level]?.label}
+        <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
+          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Current Level</span>
+          <span className="text-lg font-extrabold text-blue-600">
+            {level === "easy" ? "Beginner 😺" : level === "medium" ? "Advanced 🐾" : "Expert 🐯"}
           </span>
         </div>
 
-        <p className="mt-2 text-sm leading-7 text-slate-700 whitespace-pre-line">
-          {LEVEL_TEXT[level]?.body ?? ""}
-        </p>
-      </div>
-
-      {story ? (
-        <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-          <div className="text-sm font-extrabold text-slate-900">
-            הסיפור של מתי 😺
+        {/* Question display */}
+        <div className="text-center py-6">
+          <div className="text-3xl md:text-4xl font-black text-slate-800 tracking-wide leading-relaxed">
+            How much is <span className="text-blue-600">{q.p}%</span> of <span className="text-slate-900">{q.base}</span>?
           </div>
-          <pre className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-700">
-            {story}
-          </pre>
         </div>
-      ) : null}
+
+        <div className="mb-6">
+          <input
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              savePracticeState({ input: e.target.value });
+            }}
+            onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
+            placeholder="?"
+            type="number"
+            className="w-full text-center text-3xl font-bold py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-300"
+            autoFocus
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={checkAnswer}
+            className="w-full py-4 text-xl font-bold rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            Check Answer
+          </button>
+
+          <div className="flex gap-3">
+            <button
+              onClick={goStory}
+              className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+              title="Mati will tell a story about this problem"
+            >
+              Tell a Story 📖
+            </button>
+            <button
+              onClick={() => goNextQuestion(level)}
+              className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+              title="Skip to next question"
+            >
+              Skip ➜
+            </button>
+          </div>
+        </div>
+
+        {/* Message */}
+        {msg && (
+          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("Correct") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+            {msg}
+          </div>
+        )}
+
+        {/* Level Info */}
+        <div className="mt-8 pt-6 border-t border-slate-100">
+          <h3 className="text-sm font-black text-slate-900 mb-2 flex items-center gap-2">
+            <span>ℹ️</span> {LEVEL_TEXT[level]?.title}
+          </h3>
+          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+            {LEVEL_TEXT[level]?.body}
+          </p>
+        </div>
+
+        {/* Story Display */}
+        {story && (
+          <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
+            <h3 className="font-black text-amber-800 mb-2">Mati's Story 😺</h3>
+            <pre className="whitespace-pre-wrap font-sans text-sm text-amber-900 leading-relaxed">
+              {story}
+            </pre>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

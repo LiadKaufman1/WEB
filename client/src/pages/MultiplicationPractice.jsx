@@ -2,65 +2,55 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
-
-const MULT_STATE_KEY = "multiplication_practice_state_v1";
 import API_URL from "../config";
 
+const MULT_STATE_KEY = "multiplication_practice_state_v1";
 const API_BASE = API_URL;
 
-/**
- * Hebrew UI text stays Hebrew (kid-facing).
- * Code explanations/comments are in English (developer-facing).
- */
-const LEVEL_TEXT = {
-  beginners: {
-    title: "מתחילים 😺",
-    body:
-      "מתי החתול מסביר שכפל זה חיבור שחוזר על עצמו.\n" +
-      "בוחרים מספר אחד.\n" +
-      "מחברים אותו שוב ושוב.\n" +
-      "דוגמה: 3 × 2 זה כמו 3 + 3.\n" +
-      "אפשר לצייר עיגולים או להשתמש באצבעות.\n" +
-      "טיפ של מתי: לאט וברור זה הכי טוב 😸",
-  },
-  advanced: {
-    title: "מתקדמים 🐾",
-    body:
-      "מתי החתול כבר יודע לחשב מהר יותר.\n" +
-      "משתמשים בלוח הכפל.\n" +
-      "זוכרים תרגילים מוכרים.\n" +
-      "אם קשה — מפרקים לחלקים.\n" +
-      "דוגמה: 6 × 7 → קודם 6 × 5 ואז 6 × 2.\n" +
-      "מחברים את התוצאות.\n" +
-      "טיפ של מתי: לפרק עושה את זה קל 🐾",
-  },
-  champs: {
-    title: "אלופים 🐯",
-    body:
-      "זו רמה של אלופים אמיתיים.\n" +
-      "מתי החתול כבר מכיר את לוח הכפל טוב.\n" +
-      "אפשר להשתמש בטריקים חכמים.\n" +
-      "בודקים אם התשובה הגיונית.\n" +
-      "דוגמה: 9 × 12 → 10 × 12 ואז מורידים 12.\n" +
-      "מהיר וחכם.\n" +
-      "טיפ של מתי: לחשוב רגע חוסך טעויות 🧠",
-  },
+const LEVELS = {
+  beginners: { label: "Beginner (0–5)", min: 0, max: 5 },
+  advanced: { label: "Advanced (0–10)", min: 0, max: 10 },
+  champs: { label: "Expert (0–12)", min: 0, max: 12 },
 };
 
-const LEVELS = {
-  beginners: { label: "מתחילים", min: 0, max: 5 },
-  advanced: { label: "מתקדמים", min: 0, max: 10 },
-  champs: { label: "אלופים", min: 0, max: 12 },
+const LEVEL_TEXT = {
+  beginners: {
+    title: "Level 1: Beginner 😺",
+    body:
+      "Mati explains: Multiplication is just repeated addition.\n" +
+      "Pick a number.\n" +
+      "Add it again and again.\n" +
+      "Example: 3 × 2 is like 3 + 3.\n" +
+      "Cat Tip: Slow and steady is the best way! 😸",
+  },
+  advanced: {
+    title: "Level 2: Advanced 🐾",
+    body:
+      "Mati knows how to calculate faster here.\n" +
+      "Use the multiplication table.\n" +
+      "Remember familiar problems.\n" +
+      "If it's hard, break it into parts.\n" +
+      "Example: 6 × 7 → first 6 × 5, then 6 × 2.\n" +
+      "Add the results together.\n" +
+      "Cat Tip: Breaking it apart makes it easy! 🐾",
+  },
+  champs: {
+    title: "Level 3: Expert 🐯",
+    body:
+      "For true math champions.\n" +
+      "You know the multiplication table well.\n" +
+      "Use smart tricks.\n" +
+      "Check if the answer makes sense.\n" +
+      "Example: 9 × 12 → 10 × 12, then subtract 12.\n" +
+      "Fast and smart.\n" +
+      "Cat Tip: Thinking for a moment saves mistakes! 🧠",
+  },
 };
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/**
- * Create a multiplication question for the chosen level.
- * We keep values small for kid-friendly practice.
- */
 function makeQuestion(levelKey) {
   const { min, max } = LEVELS[levelKey] ?? LEVELS.beginners;
   const a = randInt(min, max);
@@ -68,10 +58,6 @@ function makeQuestion(levelKey) {
   return { a, b, ans: a * b };
 }
 
-/**
- * Map multiplication_f from DB to level key:
- * 1 => beginners, 2 => advanced, 3+ => champs
- */
 function levelFromMultiplicationF(multiplication_f) {
   const n = Number(multiplication_f ?? 1);
   if (!Number.isFinite(n) || n <= 1) return "beginners";
@@ -79,11 +65,6 @@ function levelFromMultiplicationF(multiplication_f) {
   return "champs";
 }
 
-/**
- * Fetch multiplication_f for the current user.
- * Expected API response:
- * { ok: true, multiplication_f: number }
- */
 async function fetchMultiplicationF(username) {
   try {
     const res = await fetch(
@@ -112,10 +93,6 @@ export default function PracticeMultiplication() {
   const [story, setStory] = useState("");
   const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
 
-  /**
-   * Persist practice state in sessionStorage so navigating to /cat-story
-   * does not reset the current exercise.
-   */
   function savePracticeState(next = {}) {
     sessionStorage.setItem(
       MULT_STATE_KEY,
@@ -123,16 +100,10 @@ export default function PracticeMultiplication() {
     );
   }
 
-  /** Clear persisted practice state */
   function clearPracticeState() {
     sessionStorage.removeItem(MULT_STATE_KEY);
   }
 
-  /**
-   * On mount:
-   * 1) restore the practice state if it exists
-   * 2) restore the cat story if it exists
-   */
   useEffect(() => {
     const saved = sessionStorage.getItem(MULT_STATE_KEY);
     if (saved) {
@@ -156,20 +127,13 @@ export default function PracticeMultiplication() {
     }
   }, []);
 
-  /**
-   * Auto-select difficulty level from multiplication_f (DB).
-   * Important: if we have saved practice state, do NOT override it.
-   */
   useEffect(() => {
     (async () => {
       if (sessionStorage.getItem(MULT_STATE_KEY)) return;
-
       const username = localStorage.getItem("username");
       if (!username) return;
-
       const f = await fetchMultiplicationF(username);
       const newLevel = levelFromMultiplicationF(f);
-
       setLevel(newLevel);
       setQ(makeQuestion(newLevel));
       setInput("");
@@ -178,12 +142,6 @@ export default function PracticeMultiplication() {
     })();
   }, []);
 
-  /**
-   * Move to next question:
-   * - cancel pending timers
-   * - clear stored state and story
-   * - generate a new question
-   */
   function goNextQuestion(nextLevel = level) {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -198,35 +156,20 @@ export default function PracticeMultiplication() {
     setQ(makeQuestion(nextLevel));
   }
 
-  /**
-   * Navigate to the story screen for the current question.
-   * We mark this question as "no points" to prevent scoring after story.
-   */
   function goStory() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-
     setNoPointsThisQuestion(true);
     savePracticeState({ noPointsThisQuestion: true });
-
-    // Use a string op so CatStory can decide how to narrate.
-    // If your CatStory expects "*", keep "*". If it expects "×", change it there.
     navigate("/cat-story", { state: { a: q.a, b: q.b, op: "*" } });
   }
 
-  /**
-   * Optional scoring:
-   * Only increase score if user did NOT ask for a story.
-   * Hook your server endpoint here if you want points.
-   */
   async function incMultiplicationScoreIfAllowed() {
     if (noPointsThisQuestion) return;
-
     const username = localStorage.getItem("username");
     if (!username) return;
-
     try {
       await fetch(`${API_BASE}/score/multiplication`, {
         method: "POST",
@@ -234,20 +177,14 @@ export default function PracticeMultiplication() {
         body: JSON.stringify({ username }),
       });
     } catch {
-      // no UI interruption if server is down
+      // ignore
     }
   }
 
-  /**
-   * Validate input and check answer.
-   * On correct answer: show success, trigger effects, optionally score, then auto-advance.
-   * On wrong answer: show error, trigger bad effects.
-   */
   function checkAnswer() {
     const val = Number(input);
-
     if (input.trim() === "" || !Number.isFinite(val)) {
-      const m = "הקלד מספר";
+      const m = "Please type a number";
       setMsg(m);
       savePracticeState({ msg: m });
       return;
@@ -255,8 +192,8 @@ export default function PracticeMultiplication() {
 
     if (val === q.ans) {
       const m = noPointsThisQuestion
-        ? "✅ נכון (בלי נקודות כי ביקשת סיפור)"
-        : "✅ נכון";
+        ? "✅ Correct! (No points because you used a story)"
+        : "✅ Correct!";
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -269,12 +206,11 @@ export default function PracticeMultiplication() {
     }
 
     triggerBadCatFx();
-    const m = "❌ לא נכון";
+    const m = "❌ Incorrect, try again";
     setMsg(m);
     savePracticeState({ msg: m });
   }
 
-  /** Cleanup timer on unmount */
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -282,108 +218,100 @@ export default function PracticeMultiplication() {
   }, []);
 
   return (
-    <div
-      style={{
-        fontFamily: "Arial",
-        maxWidth: 420,
-        margin: "40px auto",
-        direction: "rtl",
-        textAlign: "right",
-        position: "relative",
-      }}
-    >
+    <div className="mx-auto max-w-lg mt-8 px-4">
       <CatCongrats />
       <CatUncongrats />
 
-      <h2>תרגול כפל</h2>
+      <div className="card p-6 md:p-8">
+        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">Multiplication Practice ✖️</h2>
 
-      <div className="mt-2 rounded-2xl bg-white p-3 ring-1 ring-slate-200">
-        <div className="text-xs font-bold text-slate-600">הרמה שלך:</div>
-        <div className="text-sm font-extrabold text-slate-900">
-          {level === "beginners"
-            ? "מתחילים 😺"
-            : level === "advanced"
-              ? "מתקדמים 🐾"
-              : "אלופים 🐯"}
-        </div>
-      </div>
-
-      <div style={{ fontSize: 28, fontWeight: 800, margin: "16px 0" }}>
-        ?= {q.a} × {q.b}
-      </div>
-
-      <input
-        value={input}
-        onChange={(e) => {
-          setInput(e.target.value);
-          savePracticeState({ input: e.target.value });
-        }}
-        placeholder="תשובה"
-        style={{ padding: 8, width: "100%", boxSizing: "border-box" }}
-      />
-
-      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-        <button onClick={checkAnswer}>בדוק</button>
-
-        <button
-          onClick={goStory}
-          style={{
-            background: "#fff",
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            padding: "6px 10px",
-          }}
-          title="מתי החתול יספר סיפור על התרגיל הזה"
-        >
-          ספר סיפור 😺
-        </button>
-
-        <button
-          onClick={() => goNextQuestion(level)}
-          style={{
-            background: "#0f172a",
-            color: "white",
-            border: "1px solid #0f172a",
-            borderRadius: 8,
-            padding: "6px 10px",
-          }}
-          title="עובר לתרגיל הבא ומנקה את הקודם"
-        >
-          תרגיל הבא ➜
-        </button>
-      </div>
-
-      {msg ? (
-        <div style={{ marginTop: 10, fontWeight: 800, color: "#0f172a" }}>
-          {msg}
-        </div>
-      ) : null}
-
-      <div className="mt-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-extrabold text-slate-900">
-            {LEVEL_TEXT[level]?.title ?? "הסבר לרמה"}
-          </p>
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
-            {LEVELS[level]?.label}
+        <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
+          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Current Level</span>
+          <span className="text-lg font-extrabold text-blue-600">
+            {level === "beginners" ? "Beginner 😺" : level === "advanced" ? "Advanced 🐾" : "Expert 🐯"}
           </span>
         </div>
 
-        <p className="mt-2 text-sm leading-7 text-slate-700 whitespace-pre-line">
-          {LEVEL_TEXT[level]?.body ?? ""}
-        </p>
-      </div>
-
-      {story ? (
-        <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-          <div className="text-sm font-extrabold text-slate-900">
-            הסיפור של מתי 😺
+        {/* Question Display */}
+        <div className="text-center py-6">
+          <div className="flex items-center justify-center gap-4 text-5xl md:text-6xl font-black text-slate-800 tracking-wider">
+            <span>{q.a}</span>
+            <span className="text-blue-500">×</span>
+            <span>{q.b}</span>
+            <span>=</span>
           </div>
-          <pre className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-700">
-            {story}
-          </pre>
         </div>
-      ) : null}
+
+        {/* Answer Input */}
+        <div className="mb-6">
+          <input
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              savePracticeState({ input: e.target.value });
+            }}
+            onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
+            placeholder="?"
+            type="number"
+            className="w-full text-center text-3xl font-bold py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-300"
+            autoFocus
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={checkAnswer}
+            className="w-full py-4 text-xl font-bold rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            Check Answer
+          </button>
+
+          <div className="flex gap-3">
+            <button
+              onClick={goStory}
+              className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+              title="Mati will tell a story about this problem"
+            >
+              Tell a Story 📖
+            </button>
+            <button
+              onClick={() => goNextQuestion(level)}
+              className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+              title="Skip to next question"
+            >
+              Skip ➜
+            </button>
+          </div>
+        </div>
+
+        {/* Message */}
+        {msg && (
+          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("Correct") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+            {msg}
+          </div>
+        )}
+
+        {/* Level Info */}
+        <div className="mt-8 pt-6 border-t border-slate-100">
+          <h3 className="text-sm font-black text-slate-900 mb-2 flex items-center gap-2">
+            <span>ℹ️</span> {LEVEL_TEXT[level]?.title}
+          </h3>
+          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+            {LEVEL_TEXT[level]?.body}
+          </p>
+        </div>
+
+        {/* Story Display */}
+        {story && (
+          <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
+            <h3 className="font-black text-amber-800 mb-2">Mati's Story 😺</h3>
+            <pre className="whitespace-pre-wrap font-sans text-sm text-amber-900 leading-relaxed">
+              {story}
+            </pre>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

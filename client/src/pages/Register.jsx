@@ -1,54 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-// דרך הכי יציבה ב-Vite לקבצים:
-const catWelcomeGif = new URL("../assets/CatWelcome.gif", import.meta.url).href;
-
 import API_URL from "../config";
 
 export default function Register() {
-  const navigate = useNavigate();
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [age, setAge] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const [showGif, setShowGif] = useState(false);
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    // ✅ if singuped in already, go to addition
-    if (showGif) return;
-    if (localStorage.getItem("isLoggedIn") === "1") {
-      navigate("/addition", { replace: true });
-    }
-  }, [navigate, showGif]);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  async function register(e) {
-    if (e?.preventDefault) e.preventDefault();
-    if (loading) return;
-
-    if (username.trim() === "" || password.trim() === "" || String(age).trim() === "") {
-      setMsg("הכנס שם משתמש, סיסמה וגיל");
-      return;
-    }
-
-    const ageNum = Number(age);
-    if (!Number.isInteger(ageNum) || ageNum < 6 || ageNum > 12) {
-      setMsg("גיל חייב להיות בין 6 ל-12");
-      return;
-    }
-
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setMsg("");
     setLoading(true);
-    setMsg("נרשם...");
+
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum) || ageNum < 4 || ageNum > 16) {
+      setMsg("Age must be between 4 and 16");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch(`${API_URL}/register`, {
@@ -57,126 +29,83 @@ export default function Register() {
         body: JSON.stringify({ username, password, age: ageNum }),
       });
 
-      let data;
-      try {
-        const text = await res.text();
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          throw new Error(`Server sent non-JSON: ${text.slice(0, 50)}...`);
-        }
-      } catch (err) {
-        setMsg(`שגיאת תקשורת (${res.status}): ${err.message}`);
-        return;
-      }
-
-      console.log("REGISTER RESPONSE:", res.status, data);
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        setMsg(`שגיאה (${res.status}): ${data.error || "הרשמה נכשלה"}`);
+        setMsg(data.error || "Registration Failed. Try a different username.");
+        setLoading(false);
         return;
       }
 
-      // ✅ show gif first
-      console.log("SHOW GIF NOW");
-      setMsg("נרשמת בהצלחה ✅");
-      setShowGif(true);
-
-      // ✅after 0.8s save login and navigate
-      timerRef.current = setTimeout(() => {
-        console.log("NOW SAVE LOGIN + NAVIGATE");
-        localStorage.setItem("isLoggedIn", "1");
-        localStorage.setItem("username", username);
-        localStorage.setItem("age", String(ageNum));
-        window.dispatchEvent(new Event("auth-changed"));
-        navigate("/addition", { replace: true });
-      }, 800);
+      // Auto-save username for convenience
+      localStorage.setItem("username", username);
+      navigate("/login");
     } catch (err) {
-      console.log("REGISTER ERROR:", err);
-      setMsg("השרת לא זמין");
-    } finally {
+      console.error(err);
+      setMsg("Server unavailable. Please try again later.");
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div style={{ maxWidth: 420, margin: "40px auto", fontFamily: "Arial" }}>
-      <h2>הרשמה</h2>
+    <div className="mx-auto max-w-md mt-10">
+      <div className="card p-8">
+        <h2 className="text-3xl font-black text-center text-slate-900 mb-2">Join the Fun! 📝</h2>
+        <p className="text-center text-slate-500 mb-8 font-medium">Create a new account to start earning medals</p>
 
-      <form onSubmit={register}>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="שם משתמש"
-          style={{ padding: "10px", width: "100%", marginBottom: 10 }}
-        />
-
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="סיסמה"
-          type="password"
-          style={{ padding: "10px", width: "100%", marginBottom: 10 }}
-        />
-
-        <input
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
-          placeholder="גיל (6-12)"
-          type="number"
-          min="6"
-          max="12"
-          style={{ padding: "10px", width: "100%", marginBottom: 10 }}
-        />
-
-        <button type="submit" disabled={loading} style={{ padding: "10px 16px" }}>
-          {loading ? "נרשם..." : "הירשם"}
-        </button>
-      </form>
-
-      <p style={{ marginTop: 12 }}>{msg}</p>
-
-      {/* ✅ Overlay GIF */}
-      {showGif && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              background: "white",
-              borderRadius: 22,
-              padding: 18,
-              textAlign: "center",
-              width: 320,
-              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-            }}
-          >
-            <img
-              src={catWelcomeGif}
-              alt="Cat Welcome"
-              width={240}
-              height={240}
-              style={{ borderRadius: 18, display: "block", margin: "0 auto" }}
-              onError={() => console.log("GIF FAILED TO LOAD:", catWelcomeGif)}
-              onLoad={() => console.log("GIF LOADED OK")}
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Username</label>
+            <input
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Choose a username"
+              required
             />
-            <div style={{ marginTop: 10, fontWeight: 800, fontSize: 18 }}>
-              נרשמת בהצלחה! 🐱✨
-            </div>
-            <div style={{ color: "#555", marginTop: 4 }}>עוד רגע מתחילים…</div>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
+            <input
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Choose a secret password"
+              type="password"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Age</label>
+            <input
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              placeholder="How old are you? (4-16)"
+              type="number"
+              min="4"
+              max="16"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-blue-600 py-3.5 text-lg font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
+          >
+            {loading ? "Creating Account..." : "Create Account ✨"}
+          </button>
+        </form>
+
+        {msg && (
+          <div className="mt-6 rounded-xl bg-rose-50 p-3 text-center font-bold text-rose-600 border border-rose-200">
+            {msg}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-

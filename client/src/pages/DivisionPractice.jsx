@@ -2,75 +2,60 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats.jsx";
 import useCatUncongrats from "./useCatUncongrats.jsx";
-
-const DIV_STATE_KEY = "division_practice_state_v1";
 import API_URL from "../config";
 
+const DIV_STATE_KEY = "division_practice_state_v1";
 const API_BASE = API_URL;
 
-/**
- * Hebrew UI text (kid-facing).
- * Developer comments are English only.
- */
-const LEVEL_TEXT = {
-  beginners: {
-    title: "מתחילים 😺",
-    body:
-      "מתי החתול מסביר שחילוק זה 'לחלק שווה בשווה'.\n" +
-      "לוקחים מספר גדול (עוגיות 🍪).\n" +
-      "מחלקים לקבוצות שוות.\n" +
-      "סופרים כמה יש בכל קבוצה.\n" +
-      "דוגמה: 6 ÷ 2 → 3 לכל ילד.\n" +
-      "טיפ של מתי: אפשר לצייר עיגולים ולעשות קבוצות 🟣🟣🟣",
-  },
-  advanced: {
-    title: "מתקדמים 🐾",
-    body:
-      "מתי החתול כבר יודע שחילוק קשור ללוח הכפל.\n" +
-      "שואלים: 'איזה מספר כפול המחלק נותן את המחולק?'\n" +
-      "דוגמה: 24 ÷ 6 → מי כפול 6 נותן 24? → 4.\n" +
-      "אם קשה — נסה כפולות עד שמגיעים למחולק.\n" +
-      "טיפ של מתי: לחשוב על כפל עושה חילוק מהיר 🐾",
-  },
-  champs: {
-    title: "אלופים 🐯",
-    body:
-      "רמה של אלופים אמיתיים.\n" +
-      "מתי החתול משתמש בטריקים חכמים ופירוקים.\n" +
-      "דוגמה: 96 ÷ 8 → 80 ÷ 8 = 10 וגם 16 ÷ 8 = 2 → ביחד 12.\n" +
-      "בודקים עם כפל: 12 × 8 = 96 ✅\n" +
-      "טיפ של מתי: בדיקה בכפל שומרת על 0 טעויות 🧠",
-  },
+const LEVELS = {
+  beginners: { label: "Beginner (2–5)", minDivisor: 2, maxDivisor: 5, maxAnswer: 10 },
+  advanced: { label: "Advanced (2–10)", minDivisor: 2, maxDivisor: 10, maxAnswer: 12 },
+  champs: { label: "Expert (2–12)", minDivisor: 2, maxDivisor: 12, maxAnswer: 15 },
 };
 
-const LEVELS = {
-  beginners: { label: "מתחילים", minDivisor: 2, maxDivisor: 5, maxAnswer: 10 },
-  advanced: { label: "מתקדמים", minDivisor: 2, maxDivisor: 10, maxAnswer: 12 },
-  champs: { label: "אלופים", minDivisor: 2, maxDivisor: 12, maxAnswer: 15 },
+const LEVEL_TEXT = {
+  beginners: {
+    title: "Level 1: Beginner 😺",
+    body:
+      "Mati explains: Division means 'sharing equally'.\n" +
+      "Take a big number (cookies 🍪).\n" +
+      "Share them into equal groups.\n" +
+      "Count how many in each group.\n" +
+      "Example: 6 ÷ 2 → 3 for each friend.\n" +
+      "Cat Tip: Draw circles to make groups! 🟣🟣🟣",
+  },
+  advanced: {
+    title: "Level 2: Advanced 🐾",
+    body:
+      "Mati knows division is connected to multiplication.\n" +
+      "Ask: 'Which number times the divisor gives the big number?'\n" +
+      "Example: 24 ÷ 6 → ? × 6 = 24 → 4.\n" +
+      "If it's hard, try multiplying until you reach the number.\n" +
+      "Cat Tip: Thinking about multiplication makes division fast! 🐾",
+  },
+  champs: {
+    title: "Level 3: Expert 🐯",
+    body:
+      "For true math champions.\n" +
+      "Mati uses smart tricks and breakdowns.\n" +
+      "Example: 96 ÷ 8 → 80 ÷ 8 = 10 and 16 ÷ 8 = 2 → Together 12.\n" +
+      "Check with multiplication: 12 × 8 = 96 ✅\n" +
+      "Cat Tip: Checking with multiplication keeps mistakes away! 🧠",
+  },
 };
 
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/**
- * Create a division question with an integer result (no remainder):
- * Pick divisor (b) and answer (ans), then set a = b * ans.
- */
 function makeQuestion(levelKey) {
   const cfg = LEVELS[levelKey] ?? LEVELS.beginners;
-
   const b = randInt(cfg.minDivisor, cfg.maxDivisor); // divisor
   const ans = randInt(1, cfg.maxAnswer); // keep answer >= 1
   const a = b * ans; // dividend
-
   return { a, b, ans };
 }
 
-/**
- * Map division_f from DB to level key:
- * 1 => beginners, 2 => advanced, 3+ => champs
- */
 function levelFromDivisionF(division_f) {
   const n = Number(division_f ?? 1);
   if (!Number.isFinite(n) || n <= 1) return "beginners";
@@ -78,11 +63,6 @@ function levelFromDivisionF(division_f) {
   return "champs";
 }
 
-/**
- * Fetch division_f for the current user.
- * Expected API response:
- * { ok: true, division_f: number }
- */
 async function fetchDivisionF(username) {
   try {
     const res = await fetch(
@@ -90,7 +70,6 @@ async function fetchDivisionF(username) {
     );
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data?.ok) return null;
-
     const n = Number(data.division_f);
     return Number.isFinite(n) ? n : null;
   } catch {
@@ -112,10 +91,6 @@ export default function PracticeDivision() {
   const [story, setStory] = useState("");
   const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
 
-  /**
-   * Persist practice state in sessionStorage so navigating to /cat-story
-   * does not reset the current exercise.
-   */
   function savePracticeState(next = {}) {
     sessionStorage.setItem(
       DIV_STATE_KEY,
@@ -123,16 +98,10 @@ export default function PracticeDivision() {
     );
   }
 
-  /** Clear persisted practice state */
   function clearPracticeState() {
     sessionStorage.removeItem(DIV_STATE_KEY);
   }
 
-  /**
-   * On mount:
-   * 1) restore the practice state if it exists
-   * 2) restore the cat story if it exists
-   */
   useEffect(() => {
     const saved = sessionStorage.getItem(DIV_STATE_KEY);
     if (saved) {
@@ -156,20 +125,13 @@ export default function PracticeDivision() {
     }
   }, []);
 
-  /**
-   * Auto-select difficulty level from division_f (DB).
-   * Important: if we have saved practice state, do NOT override it.
-   */
   useEffect(() => {
     (async () => {
       if (sessionStorage.getItem(DIV_STATE_KEY)) return;
-
       const username = localStorage.getItem("username");
       if (!username) return;
-
       const f = await fetchDivisionF(username);
       const newLevel = levelFromDivisionF(f);
-
       setLevel(newLevel);
       setQ(makeQuestion(newLevel));
       setInput("");
@@ -178,57 +140,34 @@ export default function PracticeDivision() {
     })();
   }, []);
 
-  /**
-   * Move to next question:
-   * - cancel pending timers
-   * - clear stored state and story
-   * - generate a new question
-   */
   function goNextQuestion(nextLevel = level) {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-
     clearPracticeState();
-
     setStory("");
     sessionStorage.removeItem("cat_story_text");
     setMsg("");
     setInput("");
     setNoPointsThisQuestion(false);
-
     setQ(makeQuestion(nextLevel));
   }
 
-  /**
-   * Navigate to the story screen for the current question.
-   * We mark this question as "no points" to prevent scoring after story.
-   */
   function goStory() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-
     setNoPointsThisQuestion(true);
     savePracticeState({ noPointsThisQuestion: true });
-
-    // Send op "/" so CatStory can narrate division.
     navigate("/cat-story", { state: { a: q.a, b: q.b, op: "/" } });
   }
 
-  /**
-   * Optional scoring:
-   * Only increase score if user did NOT ask for a story.
-   * Keep this stub if you want points later; safe to leave unused.
-   */
   async function incDivisionScoreIfAllowed() {
     if (noPointsThisQuestion) return;
-
     const username = localStorage.getItem("username");
     if (!username) return;
-
     try {
       await fetch(`${API_BASE}/score/division`, {
         method: "POST",
@@ -236,20 +175,14 @@ export default function PracticeDivision() {
         body: JSON.stringify({ username }),
       });
     } catch {
-      // no UI interruption if server is down
+      // ignore
     }
   }
 
-  /**
-   * Validate input and check answer.
-   * On correct answer: show success, trigger effects, optionally score, then auto-advance.
-   * On wrong answer: show error, trigger bad effects.
-   */
   function checkAnswer() {
     const val = Number(input);
-
     if (input.trim() === "" || !Number.isFinite(val)) {
-      const m = "הקלד מספר";
+      const m = "Please type a number";
       setMsg(m);
       savePracticeState({ msg: m });
       return;
@@ -257,8 +190,8 @@ export default function PracticeDivision() {
 
     if (val === q.ans) {
       const m = noPointsThisQuestion
-        ? "✅ נכון (בלי נקודות כי ביקשת סיפור)"
-        : "✅ נכון";
+        ? "✅ Correct! (No points because you used a story)"
+        : "✅ Correct!";
       setMsg(m);
       savePracticeState({ msg: m });
 
@@ -271,12 +204,11 @@ export default function PracticeDivision() {
     }
 
     triggerBadCatFx();
-    const m = "❌ לא נכון";
+    const m = "❌ Incorrect, try again";
     setMsg(m);
     savePracticeState({ msg: m });
   }
 
-  /** Cleanup timer on unmount */
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -284,108 +216,100 @@ export default function PracticeDivision() {
   }, []);
 
   return (
-    <div
-      style={{
-        fontFamily: "Arial",
-        maxWidth: 420,
-        margin: "40px auto",
-        direction: "rtl",
-        textAlign: "right",
-        position: "relative",
-      }}
-    >
+    <div className="mx-auto max-w-lg mt-8 px-4">
       <CatCongrats />
       <CatUncongrats />
 
-      <h2>תרגול חילוק</h2>
+      <div className="card p-6 md:p-8">
+        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">Division Practice ➗</h2>
 
-      <div className="mt-2 rounded-2xl bg-white p-3 ring-1 ring-slate-200">
-        <div className="text-xs font-bold text-slate-600">הרמה שלך:</div>
-        <div className="text-sm font-extrabold text-slate-900">
-          {level === "beginners"
-            ? "מתחילים 😺"
-            : level === "advanced"
-              ? "מתקדמים 🐾"
-              : "אלופים 🐯"}
-        </div>
-      </div>
-
-      <div style={{ fontSize: 28, fontWeight: 800, margin: "16px 0" }}>
-        ?= {q.a} ÷ {q.b}
-      </div>
-
-      <input
-        value={input}
-        onChange={(e) => {
-          setInput(e.target.value);
-          savePracticeState({ input: e.target.value });
-        }}
-        placeholder="תשובה"
-        style={{ padding: 8, width: "100%", boxSizing: "border-box" }}
-      />
-
-      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-        <button onClick={checkAnswer}>בדוק</button>
-
-        <button
-          onClick={goStory}
-          style={{
-            background: "#fff",
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            padding: "6px 10px",
-          }}
-          title="מתי החתול יספר סיפור על התרגיל הזה"
-        >
-          ספר סיפור 😺
-        </button>
-
-        <button
-          onClick={() => goNextQuestion(level)}
-          style={{
-            background: "#0f172a",
-            color: "white",
-            border: "1px solid #0f172a",
-            borderRadius: 8,
-            padding: "6px 10px",
-          }}
-          title="עובר לתרגיל הבא ומנקה את הקודם"
-        >
-          תרגיל הבא ➜
-        </button>
-      </div>
-
-      {msg ? (
-        <div style={{ marginTop: 10, fontWeight: 800, color: "#0f172a" }}>
-          {msg}
-        </div>
-      ) : null}
-
-      <div className="mt-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-extrabold text-slate-900">
-            {LEVEL_TEXT[level]?.title ?? "הסבר לרמה"}
-          </p>
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
-            {LEVELS[level]?.label}
+        <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-6">
+          <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Current Level</span>
+          <span className="text-lg font-extrabold text-blue-600">
+            {level === "beginners" ? "Beginner 😺" : level === "advanced" ? "Advanced 🐾" : "Expert 🐯"}
           </span>
         </div>
 
-        <p className="mt-2 text-sm leading-7 text-slate-700 whitespace-pre-line">
-          {LEVEL_TEXT[level]?.body ?? ""}
-        </p>
-      </div>
-
-      {story ? (
-        <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-          <div className="text-sm font-extrabold text-slate-900">
-            הסיפור של מתי 😺
+        {/* Question Display */}
+        <div className="text-center py-6">
+          <div className="flex items-center justify-center gap-4 text-5xl md:text-6xl font-black text-slate-800 tracking-wider">
+            <span>{q.a}</span>
+            <span className="text-blue-500">÷</span>
+            <span>{q.b}</span>
+            <span>=</span>
           </div>
-          <pre className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-700">
-            {story}
-          </pre>
         </div>
-      ) : null}
+
+        {/* Answer Input */}
+        <div className="mb-6">
+          <input
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              savePracticeState({ input: e.target.value });
+            }}
+            onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
+            placeholder="?"
+            type="number"
+            className="w-full text-center text-3xl font-bold py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-300"
+            autoFocus
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={checkAnswer}
+            className="w-full py-4 text-xl font-bold rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            Check Answer
+          </button>
+
+          <div className="flex gap-3">
+            <button
+              onClick={goStory}
+              className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+              title="Mati will tell a story about this problem"
+            >
+              Tell a Story 📖
+            </button>
+            <button
+              onClick={() => goNextQuestion(level)}
+              className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+              title="Skip to next question"
+            >
+              Skip ➜
+            </button>
+          </div>
+        </div>
+
+        {/* Message */}
+        {msg && (
+          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("Correct") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+            {msg}
+          </div>
+        )}
+
+        {/* Level Info */}
+        <div className="mt-8 pt-6 border-t border-slate-100">
+          <h3 className="text-sm font-black text-slate-900 mb-2 flex items-center gap-2">
+            <span>ℹ️</span> {LEVEL_TEXT[level]?.title}
+          </h3>
+          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+            {LEVEL_TEXT[level]?.body}
+          </p>
+        </div>
+
+        {/* Story Display */}
+        {story && (
+          <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
+            <h3 className="font-black text-amber-800 mb-2">Mati's Story 😺</h3>
+            <pre className="whitespace-pre-wrap font-sans text-sm text-amber-900 leading-relaxed">
+              {story}
+            </pre>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
