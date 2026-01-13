@@ -57,12 +57,23 @@ export default function Register() {
         body: JSON.stringify({ username, password, age: ageNum }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      let data;
+      try {
+        const text = await res.text();
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error(`Server sent non-JSON: ${text.slice(0, 50)}...`);
+        }
+      } catch (err) {
+        setMsg(`שגיאת תקשורת (${res.status}): ${err.message}`);
+        return;
+      }
 
       console.log("REGISTER RESPONSE:", res.status, data);
 
       if (!res.ok || !data.success) {
-        setMsg(data.error || "הרשמה נכשלה");
+        setMsg(`שגיאה (${res.status}): ${data.error || "הרשמה נכשלה"}`);
         return;
       }
 
