@@ -1,8 +1,10 @@
-const User = require("./models/User");
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+import User from "./models/User.js";
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -148,16 +150,12 @@ app.use((req, res) => {
   res.status(404).json({ error: "Route not found in Express", path: req.path });
 });
 
-module.exports = app;
-
-// ... (Keep existing code)
+export default app;
 
 // Only start server dev locally
-if (require.main === module) {
+if (process.argv[1] === new URL(import.meta.url).pathname) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
-
-module.exports = app;
