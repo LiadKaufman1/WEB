@@ -1,8 +1,10 @@
-const User = require("./models/User");
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+import User from "./models/User.js";
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -16,24 +18,43 @@ app.use((req, res, next) => {
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mongoUser:mati1@cluster0.wxwcukg.mongodb.net/MorDB?retryWrites=true&w=majority";
 
-mongoose.connection.on("connected", () => console.log("✅ mongoose connected"));
-mongoose.connection.on("error", (e) => console.log("❌ mongoose error:", e.message));
-mongoose.connection.on("disconnected", () => console.log("⚠️ mongoose disconnected"));
+// 🔹 Cached Connection State
+let isConnected = false;
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("Connected to Mongo Atlas ✅"))
-  .catch((err) => console.log("Mongo connect error ❌:", err.message));
-
-function ensureDb(req, res) {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ error: "DB not connected" });
+const connectToDatabase = async () => {
+  if (isConnected) {
+    return;
   }
-  return null;
-}
+
+  try {
+    const db = await mongoose.connect(MONGO_URI, {
+      // Optional: Add timeouts if needed
+      serverSelectionTimeoutMS: 5000,
+      dbName: 'MathGameDB' // 🔹 Force separation from other projects
+    });
+    isConnected = db.connections[0].readyState === 1;
+    console.log("Connected to Mongo Atlas ✅");
+  } catch (err) {
+    console.log("Mongo connect error ❌:", err.message);
+    throw err; // Let the handler catch it
+  }
+};
+
+// Middleware to ensure DB is connected
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    res.status(503).json({ error: "DB connection failed", details: err.message });
+  }
+});
 
 // 🔹 API Router
 const api = express.Router();
+
+// Delete ensureDb function and usage since middleware handles it
+// ... (rest of the routes without ensureDb calls)
 
 // 🔹 User Stats (Unified)
 api.post("/user/stats", async (req, res) => {
@@ -56,7 +77,7 @@ api.post("/user/stats", async (req, res) => {
 // 🔹 Login Check
 api.post("/check-login", async (req, res) => {
   try {
-    if (ensureDb(req, res)) return;
+    // DB guaranteed by middleware
     const { username, password } = req.body || {};
     if (!username || !password) {
       return res.status(400).json({ error: "חסר שם משתמש או סיסמה" });
@@ -73,7 +94,7 @@ api.post("/check-login", async (req, res) => {
 // 🔹 Register
 api.post("/register", async (req, res) => {
   try {
-    if (ensureDb(req, res)) return;
+    // DB guaranteed by middleware
     const { username, password, age } = req.body || {};
     if (!username || !password || age === undefined) {
       return res.status(400).json({ success: false, error: "חסר שם משתמש / סיסמה / גיל" });
@@ -99,11 +120,12 @@ const scoreFields = ["addition", "subtraction", "multiplication", "division", "p
 scoreFields.forEach(field => {
   api.post(`/score/${field}`, async (req, res) => {
     try {
-      const { username } = req.body;
+      const { username, points } = req.body;
       if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
 
+      const pointsToAdd = typeof points === "number" && points > 0 ? points : 1;
       const update = { $inc: {} };
-      update.$inc[field] = 1;
+      update.$inc[field] = pointsToAdd;
 
       const user = await User.findOneAndUpdate(
         { username },
@@ -148,16 +170,12 @@ app.use((req, res) => {
   res.status(404).json({ error: "Route not found in Express", path: req.path });
 });
 
-module.exports = app;
-
-// ... (Keep existing code)
+export default app;
 
 // Only start server dev locally
-if (require.main === module) {
+if (process.argv[1] === new URL(import.meta.url).pathname) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
-
-module.exports = app;
