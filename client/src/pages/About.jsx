@@ -1,199 +1,145 @@
-// src/pages/AboutMathBuddy.jsx
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function AboutMathBuddy() {
   return (
-    <div dir="rtl" className="min-h-screen bg-slate-50">
-      {/* HERO */}
-      <header className="mx-auto max-w-5xl px-4 pt-10 pb-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            {/* Text */}
-            <div className="md:flex-1">
-              <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-700">
-                🐾 אתר ללימוד חשבון לגילאי 6–12
-              </div>
+    <div dir="rtl" className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-rose-100 selection:text-rose-700">
 
-              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-                לומדים חשבון עם{" "}
-                <span className="text-rose-600">מתי החתול</span> 😺
-              </h1>
-
-              <p className="mt-3 text-base leading-7 text-slate-700 md:text-lg">
-                זה אתר שעוזר לילדים ללמוד חשבון בצורה כיפית, קצרה וברורה — עם
-                בינה מלאכותית שמלווה אותם דרך <b>מתי החתול</b>. המערכת בודקת איך
-                הילד מתקדם, ואז <b>מתאימה את הרמה</b>: אם קל מדי היא מאתגרת יותר,
-                ואם קשה מדי היא מסבירה ומפשטת כדי לבנות ביטחון.
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                <Chip>➕ חיבור</Chip>
-                <Chip>➖ חיסור</Chip>
-                <Chip>✖️ כפל</Chip>
-                <Chip>➗ חילוק</Chip>
-                <Chip>📊 אחוזים</Chip>
-              </div>
-
-              <div className="mt-6">
-                <a
-                  href="/"
-                  className="inline-flex items-center justify-center rounded-2xl bg-rose-600 px-5 py-3 font-bold text-white shadow-sm hover:bg-rose-700"
-                >
-                  להתחיל לתרגל 🚀
-                </a>
-              </div>
-            </div>
-
-            {/* “Cat” card without image */}
-            <div className="md:w-[340px]">
-              <div className="rounded-3xl border border-rose-100 bg-gradient-to-b from-rose-50 to-white p-5 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-rose-700">
-                      הבינה המלאכותית שמלווה אותך
-                    </div>
-                    <div className="mt-1 text-2xl font-extrabold text-slate-900">
-                      מתי החתול 😺
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-white px-3 py-1 text-lg shadow-sm">
-                    🐾
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-2xl bg-white/80 p-4 text-center text-sm font-semibold text-slate-700">
-                  “אני מתאים לך את הרמה — כדי שתתקדם בלי לחץ!” 😸
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <MiniStat label="תרגול קצר" value="5 דק׳" />
-                  <MiniStat label="AI מלווה" value="בכל שאלה" />
-                  <MiniStat label="רמה משתנה" value="לפי התקדמות" />
-                  <MiniStat label="כיף" value="ממש!" />
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Navbar Placeholder / Back Button */}
+      <nav className="mx-auto max-w-5xl px-6 py-6 flex items-center justify-between">
+        <div className="text-xl font-black text-rose-600 tracking-tight">
+          MathBuddy<span className="text-slate-900">.</span>
         </div>
-      </header>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 rounded-xl bg-white/80 px-4 py-2 text-sm font-bold text-slate-700 shadow-sm backdrop-blur-sm transition hover:bg-white hover:text-rose-600 hover:shadow-md"
+        >
+          <span>➜</span> חזרה למשחק
+        </Link>
+      </nav>
 
-      {/* CONTENT */}
-      <main className="mx-auto max-w-5xl px-4 pb-12">
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card
-            title="✨ למה זה עוזר לילדים?"
-            icon="🧠"
-            items={[
-              "מתי החתול מלווה את הילד ומסביר בצורה ידידותית.",
-              "המערכת מתאימה את הקושי לפי ההתקדמות (לא קל מדי ולא קשה מדי).",
-              "תרגול משחקי שומר על עניין וריכוז לאורך זמן.",
-              "חיזוקים חיוביים אחרי הצלחות מעלים מוטיבציה.",
-              "הסברים פשוטים שמתאימים לגילאי 6–12.",
-            ]}
-          />
+      {/* Main Container */}
+      <main className="mx-auto max-w-4xl px-6 pb-20 pt-8 animate-fade-in-up">
 
-          <Card
-            title="👨‍👩‍👧 למה זה טוב גם להורים?"
-            icon="💙"
-            items={[
-              "רואים התקדמות אמיתית לאורך זמן.",
-              "הילד מתרגל לבד עם תחושת הצלחה.",
-              "פחות מאבקים סביב שיעורי בית.",
-              "יותר ביטחון עצמי וחיבור למתמטיקה.",
-              "תרגול עקבי בונה בסיס מצוין להמשך.",
-            ]}
-          />
-        </div>
+        {/* Header Section */}
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-slate-900 to-rose-900 p-8 md:p-16 text-center shadow-2xl shadow-rose-900/20">
 
-        {/* How it works */}
-        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="text-2xl">🎮</div>
-            <h2 className="text-xl font-extrabold text-slate-900">
-              איך זה עובד בפועל?
-            </h2>
+          {/* Background Decor */}
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-rose-500/20 blur-3xl" />
+
+          {/* Badge */}
+          <div className="relative mx-auto inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-rose-200 backdrop-blur-md border border-white/10 mb-8">
+            <span>✨</span> לומדים חשבון בחיוך
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <Step
-              n="1"
-              title="עונים על שאלות"
-              body="בוחרים נושא (חיבור/חיסור/כפל/חילוק/אחוזים) ומתחילים."
-            />
-            <Step
-              n="2"
-              title="מתי החתול עוזר"
-              body="אם טעית — מתי מסביר ומדגים. אם הצלחת — הוא מאתגר קצת יותר."
-            />
-            <Step
-              n="3"
-              title="הרמה משתנה לבד"
-              body="המערכת לומדת איך הילד מתקדם ומכוונת את הקושי בהתאם."
-            />
-          </div>
-        </section>
+          <h1 className="relative text-4xl font-black tracking-tight text-white md:text-6xl lg:text-7xl mb-6">
+            חשבון זה <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-300 to-orange-200">פשוט משחק</span>.
+          </h1>
 
-        {/* Big message */}
-        <section className="mt-6 rounded-3xl border border-rose-100 bg-rose-50 p-6">
-          <h3 className="text-lg font-extrabold text-rose-700">
-            😺 מתי החתול אומר:
-          </h3>
-          <p className="mt-2 text-base leading-7 text-slate-800">
-            “לא חייבים להיות מושלמים — חייבים להתאמן. ואני אדאג שהרמה תהיה בדיוק
-            מה שמתאים לך!” 💪
+          <p className="relative mx-auto max-w-2xl text-lg text-indigo-100/90 leading-relaxed md:text-xl">
+            הקמנו את MathBuddy כדי להפוך את הלימוד לחוויה. בלי לחץ, בלי תסכולים — רק כיף, אתגרים מותאמים אישית, וחתול אחד חכם שמלווה אתכם בכל צעד.
           </p>
-        </section>
+
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 -mt-12 px-4 relative z-10">
+          <StatCard icon="👩‍🎓" label="מתאים לכיתות" value="א׳ — ו׳" />
+          <StatCard icon="🎯" label="רמת קושי" value="מותאמת אישית" />
+          <StatCard icon="🏆" label="שיטת הניקוד" value="תגמול חיובי" />
+          <StatCard icon="😺" label="המדריך שלך" value="מתי החתול" />
+        </div>
+
+        {/* Content Columns */}
+        <div className="mt-16 grid gap-12 md:grid-cols-2">
+
+          {/* Column 1: The Mission */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-100 text-xl">🚀</span>
+              המשימה שלנו
+            </h2>
+            <p className="text-lg leading-8 text-slate-600">
+              אנחנו מאמינים שכל ילד יכול לאהוב חשבון אם רק ניגשים לזה נכון. המטרה שלנו היא לבנות ביטחון עצמי דרך הצלחות קטנות.
+              המערכת שלנו היא לא סתם "מבחן", אלא מאמן אישי שרואה איפה הילד נמצא ומושך אותו קצת למעלה — בדיוק במידה הנכונה.
+            </p>
+
+            <ul className="space-y-4 pt-4">
+              <FeatureItem text="זיהוי אוטומטי של רמה" />
+              <FeatureItem text="חיזוקים חיוביים על מאמץ" />
+              <FeatureItem text="גרפיקה נעימה וידידותית" />
+            </ul>
+          </div>
+
+          {/* Column 2: The Tech */}
+          <div className="rounded-3xl bg-white p-8 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100/50">
+            <h2 className="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-100 text-xl">🤖</span>
+              הטכנולוגיה
+            </h2>
+            <div className="space-y-6">
+              <TechBlock
+                title="בינה מלאכותית"
+                desc="מנתחת את התשובות ומתאימה את השאלות הבאות בזמן אמת."
+              />
+              <TechBlock
+                title="משחוק (Gamification)"
+                desc="שימוש באלמנטים של משחק (נקודות, חנות וירטואלית) כדי ליצור מוטיבציה."
+              />
+              <TechBlock
+                title="עיצוב מודרני"
+                desc="ממשק נקי ומזמין שמדבר בשפה של הילדים של היום."
+              />
+            </div>
+          </div>
+
+        </div>
+
+        {/* Footer / CTA */}
+        <div className="mt-20 text-center">
+          <h3 className="text-slate-400 font-bold text-sm tracking-wider uppercase mb-8">מוכנים להתחיל?</h3>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-3 rounded-2xl bg-slate-900 px-8 py-5 text-xl font-bold text-white shadow-xl shadow-slate-900/20 transition hover:-translate-y-1 hover:bg-slate-800 hover:shadow-2xl"
+          >
+            <span>🎯</span> בואו נפתור תרגיל ראשון
+          </Link>
+
+          <p className="mt-12 text-slate-400 text-sm font-medium">
+            Made with ❤️ & 🧠 for MathBuddy
+          </p>
+        </div>
+
       </main>
     </div>
   );
 }
 
-function Chip({ children }) {
+function StatCard({ icon, label, value }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-semibold text-slate-700">
-      {children}
-    </span>
-  );
-}
-
-function Card({ title, icon, items }) {
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-center gap-2">
-        <div className="text-2xl">{icon}</div>
-        <h2 className="text-xl font-extrabold text-slate-900">{title}</h2>
-      </div>
-      <ul className="mt-4 space-y-2 text-slate-700">
-        {items.map((t, i) => (
-          <li key={i} className="flex gap-2 leading-7">
-            <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-rose-500" />
-            <span>{t}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function Step({ n, title, body }) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-600 text-lg font-extrabold text-white">
-          {n}
-        </div>
-        <div className="font-extrabold text-slate-900">{title}</div>
-      </div>
-      <p className="mt-3 text-sm leading-6 text-slate-700">{body}</p>
+    <div className="rounded-2xl border border-slate-100 bg-white/80 p-5 text-center shadow-lg shadow-slate-200/50 backdrop-blur-sm transition hover:-translate-y-1 hover:shadow-xl">
+      <div className="text-3xl mb-2">{icon}</div>
+      <div className="text-xs font-bold text-slate-400 uppercase tracking-wide">{label}</div>
+      <div className="text-lg font-black text-slate-800 mt-1">{value}</div>
     </div>
   );
 }
 
-function MiniStat({ label, value }) {
+function FeatureItem({ text }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3">
-      <div className="text-xs font-semibold text-slate-500">{label}</div>
-      <div className="mt-1 text-sm font-extrabold text-slate-900">{value}</div>
+    <li className="flex items-center gap-3 text-slate-700 font-medium">
+      <div className="h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+      {text}
+    </li>
+  );
+}
+
+function TechBlock({ title, desc }) {
+  return (
+    <div className="group">
+      <h3 className="font-bold text-slate-900 group-hover:text-rose-600 transition-colors">{title}</h3>
+      <p className="text-sm text-slate-500 leading-relaxed mt-1">{desc}</p>
     </div>
   );
 }

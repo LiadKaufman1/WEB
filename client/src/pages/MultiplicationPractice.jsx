@@ -70,13 +70,12 @@ export default function PracticeMultiplication() {
   const [q, setQ] = useState(() => makeQuestion("beginners"));
   const [input, setInput] = useState("");
   const [msg, setMsg] = useState("");
-  const [showHint, setShowHint] = useState(false);
   const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
 
   function savePracticeState(next = {}) {
     sessionStorage.setItem(
       MULT_STATE_KEY,
-      JSON.stringify({ level, q, input, msg, noPointsThisQuestion, showHint, ...next })
+      JSON.stringify({ level, q, input, msg, noPointsThisQuestion, ...next })
     );
   }
 
@@ -95,7 +94,6 @@ export default function PracticeMultiplication() {
         if (typeof st?.msg === "string") setMsg(st.msg);
         if (typeof st?.noPointsThisQuestion === "boolean")
           setNoPointsThisQuestion(st.noPointsThisQuestion);
-        if (typeof st?.showHint === "boolean") setShowHint(st.showHint);
       } catch {
         // ignore
       }
@@ -116,20 +114,9 @@ export default function PracticeMultiplication() {
     clearPracticeState();
     setMsg("");
     setInput("");
-    setShowHint(false);
     setNoPointsThisQuestion(false);
     setQ(makeQuestion(nextLevel));
-    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "", showHint: false });
-  }
-
-  function toggleHint() {
-    const nextState = !showHint;
-    setShowHint(nextState);
-    savePracticeState({ showHint: nextState });
-  }
-
-  function getHintText() {
-    return `💡 טיפ: זה כמו לחבר את ${q.a} בעצמו ${q.b} פעמים.`;
+    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" });
   }
 
   async function incMultiplicationScoreIfAllowed() {
@@ -237,13 +224,6 @@ export default function PracticeMultiplication() {
           />
         </div>
 
-        {/* Hint Display */}
-        {showHint && (
-          <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 font-bold text-center animate-fade-in">
-            {getHintText()}
-          </div>
-        )}
-
         {/* Actions */}
         <div className="flex flex-col gap-3">
           <button
@@ -253,22 +233,13 @@ export default function PracticeMultiplication() {
             בדוק תשובה
           </button>
 
-          <div className="flex gap-3">
-            <button
-              onClick={toggleHint}
-              className="flex-1 py-3 font-semibold rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 active:scale-95 transition-all flex items-center justify-center gap-2"
-              title="קבל רמז"
-            >
-              <span>💡</span> רמז
-            </button>
-            <button
-              onClick={() => goNextQuestion(level)}
-              className="flex-1 py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              title="דלג לתרגיל הבא"
-            >
-              דלג ➜
-            </button>
-          </div>
+          <button
+            onClick={() => goNextQuestion(level)}
+            className="w-full py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+            title="דלג לתרגיל הבא"
+          >
+            דלג ➜
+          </button>
         </div>
 
         {/* Message */}
