@@ -26,7 +26,7 @@ export default function ParentDashboard() {
                 setIsUnlocked(true);
             } else {
                 console.error("Login failed:", data);
-                setError(data.error === "WRONG_PASSWORD" ? "סיסמה שגויה" : `שגיאת שרת: ${data.error} ${data.path ? `(Path: ${data.path})` : ""}`);
+                setError(data.error === "WRONG_PASSWORD" ? "סיסמה שגויה" : `שגיאת שרת (Debug): ${data.error} [${data.method || 'Unknown Method'}] ${data.path ? `(Path: ${data.path})` : ""}`);
             }
         } catch (err) {
             console.error("Fetch error:", err);
