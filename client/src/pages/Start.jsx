@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import MathBot from "../components/MathBot";
 import API_URL from "../config";
 
 const API = API_URL;
@@ -229,6 +230,7 @@ export default function Stats() {
           <div className="py-12 text-center text-slate-400">אין נתונים זמינים.</div>
         )}
       </div>
+      <MathBot onScoreUpdate={loadStats} username={localStorage.getItem("username")} />
     </div>
   );
 }
