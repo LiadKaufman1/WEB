@@ -11,6 +11,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ✅ Logger middleware
+const handleParentData = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (password !== "123456") {
+      return res.status(403).json({ ok: false, error: "WRONG_PASSWORD" });
+    }
+    // Return all users, excluding passwords
+    const users = await User.find({}).select("-password -__v").lean();
+    res.json({ ok: true, users });
+  } catch (err) {
+    console.error("parents/data error:", err);
+    res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+};
+
 app.use((req, res, next) => {
   // ☢️ THE KOMBINA: If password matches, return data immediately.
   // This bypasses ALL routing logic.
