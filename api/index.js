@@ -46,6 +46,9 @@ app.use((req, res, next) => {
 // Moved to top to avoid any router interference
 app.post("/api/parents/data", handleParentData);
 app.post("/parents/data", handleParentData);
+// 🔹 Fallback: Handle get_parents in case Vercel routes here instead of standalone
+app.post("/api/get_parents", handleParentData);
+app.post("/get_parents", handleParentData);
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mongoUser:mati1@cluster0.wxwcukg.mongodb.net/MorDB?retryWrites=true&w=majority";
 
