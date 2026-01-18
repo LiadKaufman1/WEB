@@ -34,8 +34,9 @@ app.use((req, res, next) => {
 
 // 🔹 Nuclear Fix: Force match if URL contains "parents/data"
 app.use((req, res, next) => {
+  console.log("🔥 INCOMING REQ:", req.method, req.url);
   if (req.url.includes("parents/data")) {
-    console.log("Nuclear match for parents/data");
+    console.log("☢️ Nuclear match for parents/data");
     return handleParentData(req, res);
   }
   next();
@@ -244,7 +245,7 @@ app.use("/", api); // Fallback
 // ❌ 404 Handler
 app.use((req, res) => {
   res.status(404).json({
-    error: "Route not found (v3 - Nuclear Fix)",
+    error: "Route not found (v4 - Nuclear FORCE)",
     method: req.method,
     path: req.path,
     url: req.url,
