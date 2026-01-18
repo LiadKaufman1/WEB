@@ -1,5 +1,5 @@
 import { useState } from "react";
-import config from "../config";
+import API_URL from "../config";
 
 export default function ParentDashboard() {
     const [password, setPassword] = useState("");
@@ -14,7 +14,7 @@ export default function ParentDashboard() {
         setLoading(true);
 
         try {
-            const res = await fetch(`${config.API_URL}/parents/data`, {
+            const res = await fetch(`${API_URL}/parents/data`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ password }),
