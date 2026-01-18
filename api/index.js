@@ -208,8 +208,9 @@ const handleParentData = async (req, res) => {
   }
 };
 
-api.post("/parents/data", handleParentData);
-api.post("/api/parents/data", handleParentData); // Extra robustness for Vercel
+
+// Handlers moved to app-level for robustness
+
 
 
 // 🔹 Debug Ping
@@ -220,10 +221,16 @@ api.get("/test", (req, res) => res.send("Typescript Test works via Express!"));
 app.use("/api", api);
 app.use("/", api); // Fallback
 
+// 🔹 Absolute Route for Vercel Robustness (Overrides Router)
+app.post("/api/parents/data", handleParentData);
+app.post("/parents/data", handleParentData);
+
+// ❌ 404 Handler
 // ❌ 404 Handler
 app.use((req, res) => {
   res.status(404).json({
     error: "Route not found in Express",
+    method: req.method,
     path: req.path,
     url: req.url,
     originalUrl: req.originalUrl,
