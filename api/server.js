@@ -245,7 +245,7 @@ app.use("/", api); // Fallback
 // ❌ 404 Handler
 app.use((req, res) => {
   res.status(404).json({
-    error: "Route not found (v4 - Nuclear FORCE)",
+    error: "Route not found (v5 - Renamed File)",
     method: req.method,
     path: req.path,
     url: req.url,

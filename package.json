@@ -6,7 +6,7 @@
     "scripts": {
         "postinstall": "cd client && npm install",
         "build": "cd client && npm run build && cd .. && rm -rf dist && mv client/dist dist",
-        "server": "node api/index.js",
+        "server": "node api/server.js",
         "client": "cd client && npm run dev",
         "dev": "concurrently \"npm run server\" \"npm run client\""
     },
