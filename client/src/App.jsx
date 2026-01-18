@@ -15,6 +15,7 @@ import DivisionPractice from "./pages/DivisionPractice.jsx";
 import PracticePercent from "./pages/PracticePercent.jsx";
 
 import CatStory from "./pages/CatStory.jsx";
+import ParentDashboard from "./pages/ParentDashboard.jsx";
 
 function NotFound() {
   return (
@@ -117,6 +118,7 @@ export default function App() {
                 <>
                   <Tab to="/login" icon="🔐">כניסה</Tab>
                   <Tab to="/register" icon="📝">הרשמה</Tab>
+                  <Tab to="/parents" icon="👨‍👩‍👧‍👦">הורים</Tab>
                   <Tab to="/about" icon="ℹ️">אודות</Tab>
                 </>
               ) : (
@@ -146,6 +148,7 @@ export default function App() {
             <Route path="/" element={<Navigate to={authed ? "/start" : "/login"} replace />} />
             <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
             <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+            <Route path="/parents" element={<ParentDashboard />} />
             <Route path="/about" element={<About />} />
 
             <Route path="/start" element={<ProtectedRoute><Start /></ProtectedRoute>} />

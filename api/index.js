@@ -191,6 +191,22 @@ scoreFields.forEach(field => {
   });
 });
 
+// 🔹 Parent Mode Data
+api.post("/parents/data", async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (password !== "123456") {
+      return res.status(403).json({ ok: false, error: "WRONG_PASSWORD" });
+    }
+    // Return all users, excluding passwords
+    const users = await User.find({}).select("-password -__v").lean();
+    res.json({ ok: true, users });
+  } catch (err) {
+    console.error("parents/data error:", err);
+    res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
+
 // 🔹 Debug Ping
 api.get("/ping", (req, res) => res.json({ msg: "pong", time: new Date() }));
 api.get("/test", (req, res) => res.send("Typescript Test works via Express!"));
