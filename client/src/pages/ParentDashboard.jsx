@@ -14,7 +14,7 @@ export default function ParentDashboard() {
         setLoading(true);
 
         try {
-            const res = await fetch(`${API_URL}/get_parents`, {
+            const res = await fetch(`${API_URL}/parents/data`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ password }),
@@ -26,7 +26,7 @@ export default function ParentDashboard() {
                 setIsUnlocked(true);
             } else {
                 console.error("Login failed:", data);
-                setError(data.error === "WRONG_PASSWORD" ? "סיסמה שגויה" : `שגיאת שרת (Standalone): ${data.error} [${data.method || 'Unknown'}] ${data.version || ''}`);
+                setError(data.error === "WRONG_PASSWORD" ? "סיסמה שגויה" : `שגיאת שרת: ${data.error} [${data.method || 'Unknown'}] ${data.version || ''}`);
             }
         } catch (err) {
             console.error("Fetch error:", err);

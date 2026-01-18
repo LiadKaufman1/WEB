@@ -6,6 +6,10 @@
             "destination": "/api/get_parents.js"
         },
         {
+            "source": "/api/(.*)",
+            "destination": "/api/index.js"
+        },
+        {
             "source": "/((?!api/.*).*)",
             "destination": "/client/index.html"
         }

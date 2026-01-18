@@ -44,6 +44,7 @@ app.use((req, res, next) => {
 
 // 🔹 Absolute Route for Vercel Robustness (Overrides Router)
 // Moved to top to avoid any router interference
+// 🔹 Primary Route (Gemini Advice: Verify this exists)
 app.post("/api/parents/data", handleParentData);
 app.post("/parents/data", handleParentData);
 // 🔹 Fallback: Handle get_parents in case Vercel routes here instead of standalone
@@ -236,6 +237,19 @@ scoreFields.forEach(field => {
 
 // 🔹 Debug Ping
 api.get("/ping", (req, res) => res.json({ msg: "pong", time: new Date() }));
+api.get("/debug-routes", (req, res) => {
+  const routes = [];
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) { // routes registered directly on the app
+      routes.push(middleware.route.path);
+    } else if (middleware.name === 'router') { // router middleware 
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) routes.push('/api' + handler.route.path);
+      });
+    }
+  });
+  res.json({ routes });
+});
 api.get("/test", (req, res) => res.send("Typescript Test works via Express!"));
 
 // ✅ Mount API Router
@@ -248,7 +262,7 @@ app.use("/", api); // Fallback
 // ❌ 404 Handler
 app.use((req, res) => {
   res.status(404).json({
-    error: "Route not found (v6 - Reverted to index.js)",
+    error: "Route not found (v7 - Gemini Advice)",
     method: req.method,
     path: req.path,
     url: req.url,
