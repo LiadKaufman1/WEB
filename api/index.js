@@ -12,10 +12,30 @@ app.use(cors());
 app.use(express.json());
 
 // ✅ Logger middleware
+const handleParentData = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (password !== "123456") {
+      return res.status(403).json({ ok: false, error: "WRONG_PASSWORD" });
+    }
+    // Return all users, excluding passwords
+    const users = await User.find({}).select("-password -__v").lean();
+    res.json({ ok: true, users });
+  } catch (err) {
+    console.error("parents/data error:", err);
+    res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+};
+
 app.use((req, res, next) => {
   console.log(req.method, req.url, req.body);
   next();
 });
+
+// 🔹 Absolute Route for Vercel Robustness (Overrides Router)
+// Moved to top to avoid any router interference
+app.post("/api/parents/data", handleParentData);
+app.post("/parents/data", handleParentData);
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://mongoUser:mati1@cluster0.wxwcukg.mongodb.net/MorDB?retryWrites=true&w=majority";
 
@@ -193,20 +213,8 @@ scoreFields.forEach(field => {
 });
 
 // 🔹 Parent Mode Data
-const handleParentData = async (req, res) => {
-  try {
-    const { password } = req.body;
-    if (password !== "123456") {
-      return res.status(403).json({ ok: false, error: "WRONG_PASSWORD" });
-    }
-    // Return all users, excluding passwords
-    const users = await User.find({}).select("-password -__v").lean();
-    res.json({ ok: true, users });
-  } catch (err) {
-    console.error("parents/data error:", err);
-    res.status(500).json({ ok: false, error: "SERVER_ERROR" });
-  }
-};
+
+
 
 
 // Handlers moved to app-level for robustness
@@ -221,9 +229,7 @@ api.get("/test", (req, res) => res.send("Typescript Test works via Express!"));
 app.use("/api", api);
 app.use("/", api); // Fallback
 
-// 🔹 Absolute Route for Vercel Robustness (Overrides Router)
-app.post("/api/parents/data", handleParentData);
-app.post("/parents/data", handleParentData);
+
 
 // ❌ 404 Handler
 // ❌ 404 Handler
