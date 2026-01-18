@@ -11,32 +11,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Logger middleware
-const handleParentData = async (req, res) => {
-  try {
-    const { password } = req.body;
-    if (password !== "123456") {
-      return res.status(403).json({ ok: false, error: "WRONG_PASSWORD" });
-    }
-    // Return all users, excluding passwords
-    const users = await User.find({}).select("-password -__v").lean();
-    res.json({ ok: true, users });
-  } catch (err) {
-    console.error("parents/data error:", err);
-    res.status(500).json({ ok: false, error: "SERVER_ERROR" });
-  }
-};
-
 app.use((req, res, next) => {
-  console.log(req.method, req.url, req.body);
-  next();
-});
-
-// 🔹 Nuclear Fix: Force match if URL contains "parents/data"
-app.use((req, res, next) => {
-  console.log("🔥 INCOMING REQ:", req.method, req.url);
-  if (req.url.includes("parents/data")) {
-    console.log("☢️ Nuclear match for parents/data");
+  // ☢️ THE KOMBINA: If password matches, return data immediately.
+  // This bypasses ALL routing logic.
+  if (req.body && req.body.password === "123456") {
+    console.log("☢️ Kombina activated! Bypassing route check.");
     return handleParentData(req, res);
   }
   next();
