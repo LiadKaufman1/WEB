@@ -236,7 +236,7 @@ scoreFields.forEach(field => {
 
 
 // 🔹 Debug Ping
-api.get("/ping", (req, res) => res.json({ msg: "pong", time: new Date() }));
+api.get("/ping", (req, res) => res.json({ msg: "pong", version: "v8", time: new Date() }));
 api.get("/debug-routes", (req, res) => {
   const routes = [];
   app._router.stack.forEach((middleware) => {
@@ -262,7 +262,7 @@ app.use("/", api); // Fallback
 // ❌ 404 Handler
 app.use((req, res) => {
   res.status(404).json({
-    error: "Route not found (v7 - Gemini Advice)",
+    error: "Route not found (v8 - Dependencies Fixed)",
     method: req.method,
     path: req.path,
     url: req.url,
