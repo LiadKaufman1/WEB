@@ -5,7 +5,10 @@
     "type": "module",
     "scripts": {
         "postinstall": "cd client && npm install",
-        "build": "cd client && npm run build && cd .. && rm -rf dist && mv client/dist dist"
+        "build": "cd client && npm run build && cd .. && rm -rf dist && mv client/dist dist",
+        "server": "node api/index.js",
+        "client": "cd client && npm run dev",
+        "dev": "concurrently \"npm run server\" \"npm run client\""
     },
     "dependencies": {
         "cors": "^2.8.5",
@@ -15,5 +18,8 @@
     },
     "engines": {
         "node": "18.x"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
     }
 }
