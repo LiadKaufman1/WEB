@@ -245,7 +245,7 @@ app.use("/", api); // Fallback
 // ❌ 404 Handler
 app.use((req, res) => {
   res.status(404).json({
-    error: "Route not found (v5 - Renamed File)",
+    error: "Route not found (v6 - Reverted to index.js)",
     method: req.method,
     path: req.path,
     url: req.url,
