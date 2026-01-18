@@ -193,7 +193,7 @@ scoreFields.forEach(field => {
 });
 
 // 🔹 Parent Mode Data
-api.post("/parents/data", async (req, res) => {
+const handleParentData = async (req, res) => {
   try {
     const { password } = req.body;
     if (password !== "123456") {
@@ -206,7 +206,11 @@ api.post("/parents/data", async (req, res) => {
     console.error("parents/data error:", err);
     res.status(500).json({ ok: false, error: "SERVER_ERROR" });
   }
-});
+};
+
+api.post("/parents/data", handleParentData);
+api.post("/api/parents/data", handleParentData); // Extra robustness for Vercel
+
 
 // 🔹 Debug Ping
 api.get("/ping", (req, res) => res.json({ msg: "pong", time: new Date() }));
@@ -218,7 +222,13 @@ app.use("/", api); // Fallback
 
 // ❌ 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Route not found in Express", path: req.path });
+  res.status(404).json({
+    error: "Route not found in Express",
+    path: req.path,
+    url: req.url,
+    originalUrl: req.originalUrl,
+    baseUrl: req.baseUrl
+  });
 });
 
 export default app;
