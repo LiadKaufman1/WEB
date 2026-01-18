@@ -25,11 +25,12 @@ export default function ParentDashboard() {
                 setUsers(data.users);
                 setIsUnlocked(true);
             } else {
-                setError("סיסמה שגויה");
+                console.error("Login failed:", data);
+                setError(data.error === "WRONG_PASSWORD" ? "סיסמה שגויה" : `שגיאת שרת: ${data.error || "לא ידועה"}`);
             }
         } catch (err) {
-            console.error(err);
-            setError("שגיאה בחיבור לשרת");
+            console.error("Fetch error:", err);
+            setError("שגיאה בחיבור לשרת (בדוק שהשרת רץ)");
         } finally {
             setLoading(false);
         }
