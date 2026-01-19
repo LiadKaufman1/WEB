@@ -157,7 +157,7 @@ export default function PracticePercent() {
     const points = LEVELS[level]?.points || 1;
 
     try {
-      await fetch(`${API_BASE}/score-v2/percent`, {
+      await fetch(`${API_BASE}/score/percent?t=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),

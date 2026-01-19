@@ -182,7 +182,7 @@ api.post("/shop/buy", async (req, res) => {
 const scoreFields = ["addition", "subtraction", "multiplication", "division", "percent"];
 
 scoreFields.forEach(field => {
-  api.post(`/score-v2/${field}`, async (req, res) => {
+  api.post(`/score/${field}`, async (req, res) => {
     try {
       const { username, points, isCorrect } = req.body;
       console.log(`[SCORE] Field: ${field}, User: ${username}, isCorrect: ${isCorrect} (${typeof isCorrect})`);

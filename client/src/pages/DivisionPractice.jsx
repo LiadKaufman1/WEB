@@ -125,7 +125,7 @@ export default function PracticeDivision() {
     const points = LEVELS[level]?.points || 1;
 
     try {
-      await fetch(`${API_BASE}/score-v2/division`, {
+      await fetch(`${API_BASE}/score/division?t=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
