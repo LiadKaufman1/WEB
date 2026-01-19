@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
+import SmartTip from "../components/SmartTip";
 import API_URL from "../config";
 
 const PERCENT_STATE_KEY = "percent_practice_state_v2";
@@ -148,8 +149,8 @@ export default function PracticePercent() {
     savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" }); // Reset hint implicit
   }
 
-  async function incPercentScoreIfAllowed() {
-    if (noPointsThisQuestion) return;
+  async function incPercentScoreIfAllowed(isCorrect = true) {
+    if (noPointsThisQuestion && isCorrect) return;
     const username = localStorage.getItem("username");
     if (!username) return;
 
@@ -159,7 +160,7 @@ export default function PracticePercent() {
       await fetch(`${API_BASE}/score/percent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, points }),
+        body: JSON.stringify({ username, points, isCorrect }),
       });
     } catch {
       // ignore
@@ -184,7 +185,7 @@ export default function PracticePercent() {
       savePracticeState({ msg: m });
 
       triggerCatFx();
-      incPercentScoreIfAllowed();
+      incPercentScoreIfAllowed(true);
 
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => goNextQuestion(level), 1500);
@@ -194,6 +195,7 @@ export default function PracticePercent() {
     triggerBadCatFx();
     const m = "❌ טעות, נסה שוב";
     setMsg(m);
+    incPercentScoreIfAllowed(false);
     savePracticeState({ msg: m });
   }
 
@@ -218,8 +220,8 @@ export default function PracticePercent() {
               key={lvlKey}
               onClick={() => changeLevel(lvlKey)}
               className={`py-2 rounded-xl text-sm font-bold transition-all ${level === lvlKey
-                  ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                 }`}
             >
               {lvlKey === "easy" ? "קל 😺" : lvlKey === "medium" ? "בינוני 🐾" : "קשה 🐯"}
@@ -273,6 +275,10 @@ export default function PracticePercent() {
             {msg}
           </div>
         )}
+
+        <div className="mt-6">
+          <SmartTip topic="percent" />
+        </div>
 
         {/* Level Info */}
         <div className="mt-8 pt-6 border-t border-slate-100">

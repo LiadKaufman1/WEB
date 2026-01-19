@@ -11,16 +11,18 @@ const UserSchema = new mongoose.Schema({
   multiplication: { type: Number, default: 0 },
   division: { type: Number, default: 0 },
   percent: { type: Number, default: 0 },
+  incorrect: { type: Number, default: 0 },
 
   // Shop
   spentPoints: { type: Number, default: 0 },
   inventory: { type: [String], default: [] },
 
-  // Progress History (for Graph)
+  // Progress History (Daily Stats)
   history: {
     type: [{
-      date: { type: Date, default: Date.now },
-      score: Number
+      date: { type: String }, // Format: DD/MM/YYYY
+      correct: { type: Number, default: 0 },
+      incorrect: { type: Number, default: 0 }
     }],
     default: []
   }

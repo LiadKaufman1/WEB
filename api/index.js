@@ -184,32 +184,38 @@ const scoreFields = ["addition", "subtraction", "multiplication", "division", "p
 scoreFields.forEach(field => {
   api.post(`/score/${field}`, async (req, res) => {
     try {
-      const { username, points } = req.body;
+      const { username, points, isCorrect } = req.body;
       if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
 
-      const pointsToAdd = typeof points === "number" && points > 0 ? points : 1;
-      // 1. First get user to calc total
-      let user = await User.findOne({ username });
+      const pointsToAdd = (typeof points === "number" && points > 0) ? points : 1;
+      const today = new Date().toLocaleDateString("en-GB"); // DD/MM/YYYY
+
+      const user = await User.findOne({ username });
       if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
 
-      // 2. Calc new total for history
-      const currentTotal = (user.addition || 0) + (user.subtraction || 0) + (user.multiplication || 0) + (user.division || 0) + (user.percent || 0);
-      const newTotal = currentTotal + pointsToAdd;
+      // 1. Update Global Stats
+      if (isCorrect !== false) { // Default to true if undefined
+        user[field] = (user[field] || 0) + pointsToAdd;
+      } else {
+        user.incorrect = (user.incorrect || 0) + 1;
+      }
 
-      // 3. Update field AND history
-      const update = {
-        $inc: { [field]: pointsToAdd },
-        $push: { history: { date: new Date(), score: newTotal } }
-      };
+      // 2. Update Daily History
+      const historyEntry = user.history.find(h => h.date === today);
+      if (historyEntry) {
+        if (isCorrect !== false) historyEntry.correct += 1;
+        else historyEntry.incorrect += 1;
+      } else {
+        user.history.push({
+          date: today,
+          correct: (isCorrect !== false) ? 1 : 0,
+          incorrect: (isCorrect === false) ? 1 : 0
+        });
+      }
 
-      user = await User.findOneAndUpdate(
-        { username },
-        update,
-        { new: true, projection: { password: 0 } }
-      );
+      await user.save();
 
-      if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
-      res.json({ ok: true, [field]: user[field] });
+      res.json({ ok: true, [field]: user[field], incorrect: user.incorrect });
     } catch (e) {
       console.log("ERR:", e);
       res.status(500).json({ ok: false, error: "SERVER_ERROR" });

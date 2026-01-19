@@ -96,39 +96,76 @@ export default function MathBot({ onScoreUpdate, username }) {
         setMessages(newMsgs);
         setInput("");
 
-        // Validate
-        const isCorrect = userText === currentQ.correct;
+        // Check if input is a number (Answer attempt)
+        const isNumber = /^-?\d+$/.test(userText);
 
-        if (isCorrect) {
-            // API Call
-            try {
-                const res = await fetch(`${API_URL}/score/${topic}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, points: 5 })
-                });
-                const data = await res.json();
+        if (isNumber) {
+            const isCorrect = userText === currentQ.correct;
+            if (isCorrect) {
+                try {
+                    const res = await fetch(`${API_URL}/score/${topic}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, points: 5, isCorrect: true })
+                    });
+                    const data = await res.json();
 
-                if (data.ok) {
-                    onScoreUpdate(); // Refresh stats
-                    const nextQ = generateSingleQuestion(topic, level);
-                    setCurrentQ(nextQ);
-                    setMessages(prev => [...prev, {
-                        id: Date.now() + 1,
-                        sender: 'bot',
-                        text: `כל הכבוד! צדקת 🎉 (+5 נקודות). השאלה הבאה: ${nextQ.question.replace(' = ?', '')}`
-                    }]);
+                    if (data.ok) {
+                        onScoreUpdate && onScoreUpdate();
+                        const nextQ = generateSingleQuestion(topic, level);
+                        setCurrentQ(nextQ);
+                        setMessages(prev => [...prev, {
+                            id: Date.now() + 1,
+                            sender: 'bot',
+                            text: `כל הכבוד! צדקת 🎉 (+5 נקודות). השאלה הבאה: ${nextQ.question.replace(' = ?', '')}`
+                        }]);
+                    }
+                } catch (e) {
+                    console.error(e);
                 }
-            } catch (e) {
-                console.error(e);
+            } else {
+                // Log error
+                try {
+                    await fetch(`${API_URL}/score/${topic}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, points: 0, isCorrect: false })
+                    });
+                    onScoreUpdate && onScoreUpdate();
+                } catch (e) { }
+
+                setMessages(prev => [...prev, {
+                    id: Date.now() + 1,
+                    sender: 'bot',
+                    text: `לא בדיוק... נסה שוב! 🤔`
+                }]);
             }
-        } else {
-            setMessages(prev => [...prev, {
-                id: Date.now() + 1,
-                sender: 'bot',
-                text: `לא בדיוק... נסה שוב! 🤔`
-            }]);
+            return;
         }
+
+        // Handle General Questions
+        const lower = userText.toLowerCase();
+        let reply = "אני יודע רק חשבון! נסה לכתוב מספר לתשובה, או שאל אותי על חיבור, חיסור, כפל, או חילוק.";
+
+        if (lower.includes("היי") || lower.includes("שלום") || lower.includes("hello")) {
+            reply = "שלום! מוכן לתרגל חשבון? 😃";
+        } else if (lower.includes("עזרה") || lower.includes("help")) {
+            reply = "בטח! אני כאן כדי לתרגל איתך. בחר נושא למעלה ונסה לענות על השאלה.";
+        } else if (lower.includes("חיבור") || lower.includes("add")) {
+            reply = "חיבור זה להוסיף שני מספרים ביחד. למשל 2 + 2 = 4.";
+        } else if (lower.includes("חיסור") || lower.includes("sub")) {
+            reply = "חיסור זה להוריד כמות ממספר אחר. למשל 5 - 2 = 3.";
+        } else if (lower.includes("כפל") || lower.includes("mult")) {
+            reply = "כפל זה חיבור חוזר. 3 פעמים 2 זה כמו 2 + 2 + 2 = 6.";
+        } else if (lower.includes("חילוק") || lower.includes("div")) {
+            reply = "חילוק זה לחלק שווה בשווה. 6 סוכריות ל-2 ילדים = 3 לכל אחד.";
+        }
+
+        setMessages(prev => [...prev, {
+            id: Date.now() + 1,
+            sender: 'bot',
+            text: reply
+        }]);
     }
 
     return (

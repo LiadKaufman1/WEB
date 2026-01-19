@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
+import SmartTip from "../components/SmartTip";
 import API_URL from "../config";
 
 const ADD_STATE_KEY = "addition_practice_state_v2";
@@ -117,8 +118,8 @@ export default function PracticeAddition() {
     savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" }); // Reset hint state implicitly by omission
   }
 
-  async function incAdditionScoreIfAllowed() {
-    if (noPointsThisQuestion) return;
+  async function incAdditionScoreIfAllowed(isCorrect = true) {
+    if (noPointsThisQuestion && isCorrect) return; // Only skip if correct (failures always count)
     const username = localStorage.getItem("username");
     if (!username) return;
 
@@ -128,7 +129,7 @@ export default function PracticeAddition() {
       await fetch(`${API_BASE}/score/addition`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, points }),
+        body: JSON.stringify({ username, points, isCorrect }),
       });
     } catch {
       // ignore
@@ -153,7 +154,7 @@ export default function PracticeAddition() {
       savePracticeState({ msg: m });
 
       triggerCatFx();
-      incAdditionScoreIfAllowed();
+      incAdditionScoreIfAllowed(true); // Send success
 
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => goNextQuestion(level), 1500);
@@ -163,6 +164,7 @@ export default function PracticeAddition() {
     triggerBadCatFx();
     const m = "❌ טעות, נסה שוב";
     setMsg(m);
+    incAdditionScoreIfAllowed(false); // Send failure
     savePracticeState({ msg: m });
   }
 
@@ -187,8 +189,8 @@ export default function PracticeAddition() {
               key={lvlKey}
               onClick={() => changeLevel(lvlKey)}
               className={`py-2 rounded-xl text-sm font-bold transition-all ${level === lvlKey
-                  ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                 }`}
             >
               {lvlKey === "easy" ? "קל 😺" : lvlKey === "medium" ? "בינוני 🐾" : "קשה 🐯"}
@@ -246,6 +248,10 @@ export default function PracticeAddition() {
             {msg}
           </div>
         )}
+
+        <div className="mt-6">
+          <SmartTip topic="addition" />
+        </div>
 
         {/* Level Info */}
         <div className="mt-8 pt-6 border-t border-slate-100">
