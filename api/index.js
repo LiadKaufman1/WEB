@@ -197,7 +197,9 @@ scoreFields.forEach(field => {
       if (isCorrect !== false) { // Default to true if undefined
         user[field] = (user[field] || 0) + pointsToAdd;
       } else {
-        user.incorrect = (user.incorrect || 0) + 1;
+        const incorrectField = `${field}_incorrect`;
+        user[incorrectField] = (user[incorrectField] || 0) + 1;
+        user.incorrect = (user.incorrect || 0) + 1; // Keep global for legacy/total tracking
       }
 
       // 2. Handle Streak
