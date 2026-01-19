@@ -195,7 +195,10 @@ scoreFields.forEach(field => {
       if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
 
       // 1. Update Global Stats
-      const isFailure = isCorrect === false || isCorrect === "false";
+      // Validating input: explicit check for false values
+      const isFailure = isCorrect === false || isCorrect === "false" || isCorrect === 0;
+
+      console.log(`[SCORE] ${field} | isCorrect raw: ${isCorrect} (${typeof isCorrect}) | isFailure: ${isFailure} | V: ${new Date().toISOString()}`);
 
       if (!isFailure) {
         user[field] = (user[field] || 0) + pointsToAdd;
