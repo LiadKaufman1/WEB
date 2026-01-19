@@ -154,9 +154,10 @@ export default function Stats() {
               <span>ההישגים שלי</span>
               <span className="text-3xl">🏆</span>
             </h2>
-            <p className="mt-2 text-slate-500 font-medium">
-              סה"כ נקודות: <span className="font-bold text-blue-600 text-lg">{totalPoints}</span> |
-              יתרה לקניות: <span className="font-bold text-emerald-600 text-lg">{balance} 💰</span>
+            <p className="mt-2 text-slate-500 font-medium flex items-center gap-4">
+              <span>סה"כ נקודות: <span className="font-bold text-blue-600 text-lg">{totalPoints}</span></span>
+              <span>יתרה: <span className="font-bold text-emerald-600 text-lg">{balance} 💰</span></span>
+              {stats.streak > 0 && <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-bold border border-orange-200">🔥 רצף: {stats.streak} ימים</span>}
             </p>
           </div>
 

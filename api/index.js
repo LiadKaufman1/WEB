@@ -200,11 +200,28 @@ scoreFields.forEach(field => {
         user.incorrect = (user.incorrect || 0) + 1;
       }
 
-      // 2. Update Daily History
-      const historyEntry = user.history.find(h => h.date === today);
-      if (historyEntry) {
-        if (isCorrect !== false) historyEntry.correct += 1;
-        else historyEntry.incorrect += 1;
+      // 2. Handle Streak
+
+      if (user.lastActivity !== today) {
+        // Check if yesterday was the last activity
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yStr = yesterday.toLocaleDateString("en-GB");
+
+        if (user.lastActivity === yStr) {
+          user.streak = (user.streak || 0) + 1;
+        } else {
+          // Missed a day or first time
+          user.streak = 1;
+        }
+        user.lastActivity = today;
+      }
+
+      // Handle History
+      let daily = user.history.find(h => h.date === today);
+      if (daily) {
+        if (isCorrect !== false) daily.correct = (daily.correct || 0) + 1;
+        else daily.incorrect = (daily.incorrect || 0) + 1;
       } else {
         user.history.push({
           date: today,
@@ -214,8 +231,7 @@ scoreFields.forEach(field => {
       }
 
       await user.save();
-
-      res.json({ ok: true, [field]: user[field], incorrect: user.incorrect });
+      res.json({ ok: true, streak: user.streak });
     } catch (e) {
       console.log("ERR:", e);
       res.status(500).json({ ok: false, error: "SERVER_ERROR" });

@@ -25,7 +25,9 @@ const UserSchema = new mongoose.Schema({
       incorrect: { type: Number, default: 0 }
     }],
     default: []
-  }
+  },
+  streak: { type: Number, default: 0 },
+  lastActivity: { type: String, default: "" }
 });
 
 // Prevent overwrite in serverless
