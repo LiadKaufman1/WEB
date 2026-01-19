@@ -168,6 +168,8 @@ export default function App() {
           © {new Date().getFullYear()} החשבון של מתי. כל הזכויות שמורות. 🐾
         </footer>
       </div>
+
+      {authed && <MathBot username={localStorage.getItem("username") || "חבר"} />}
     </div>
   );
 }

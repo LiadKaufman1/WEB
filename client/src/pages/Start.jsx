@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import LearningGraph from "../components/LearningGraph";
 import SmartTip from "../components/SmartTip";
+import API_URL from "../config";
 
 const API = API_URL;
 
