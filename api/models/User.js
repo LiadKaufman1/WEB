@@ -14,7 +14,16 @@ const UserSchema = new mongoose.Schema({
 
   // Shop
   spentPoints: { type: Number, default: 0 },
-  inventory: { type: [String], default: [] }
+  inventory: { type: [String], default: [] },
+
+  // Progress History (for Graph)
+  history: {
+    type: [{
+      date: { type: Date, default: Date.now },
+      score: Number
+    }],
+    default: []
+  }
 });
 
 // Prevent overwrite in serverless

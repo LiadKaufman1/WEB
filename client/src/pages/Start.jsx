@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MathBot from "../components/MathBot";
+import LearningGraph from "../components/LearningGraph";
+import SmartTip from "../components/SmartTip";
 import API_URL from "../config";
 
 const API = API_URL;
@@ -218,10 +220,19 @@ export default function Stats() {
             {/* Existing Stats Grid */}
             <div>
               <h3 className="text-xl font-bold text-slate-800 mb-4">המצב שלי במקצועות 📊</h3>
-              <div className="grid gap-4 md:grid-cols-1">
-                {rows.map((r) => (
-                  <ScoreRow key={r.key} {...r} />
-                ))}
+              {rows.map((r) => (
+                <ScoreRow key={r.key} {...r} />
+              ))}
+            </div>
+
+
+            {/* Learning Graph & Tips */}
+            <div className="grid gap-6">
+              <LearningGraph history={stats.history} />
+              <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h4 className="font-bold text-slate-700 mb-2">עוזר אישי חכם 🧠</h4>
+                <p className="text-sm text-slate-500 mb-4">נתקעת? קבל טיפ המותאם בדיוק לנושא שאתה מתרגל כרגע.</p>
+                <SmartTip topic="multiplication" />
               </div>
             </div>
 
@@ -231,7 +242,7 @@ export default function Stats() {
         )}
       </div>
       <MathBot onScoreUpdate={loadStats} username={localStorage.getItem("username")} />
-    </div>
+    </div >
   );
 }
 

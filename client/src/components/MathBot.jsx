@@ -136,14 +136,14 @@ export default function MathBot({ onScoreUpdate, username }) {
             {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed bottom-6 left-6 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                className="fixed bottom-6 left-6 z-[9999] bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
             >
                 <span className="text-3xl">🤖</span>
             </button>
 
             {/* Chat Window */}
             {isOpen && (
-                <div className="fixed bottom-24 left-6 z-50 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-fade-in-up" style={{ maxHeight: '500px' }}>
+                <div className="fixed bottom-24 left-6 z-[9999] w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-fade-in-up" style={{ maxHeight: '500px' }}>
 
                     {/* Header */}
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex justify-between items-center">

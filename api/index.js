@@ -188,10 +188,21 @@ scoreFields.forEach(field => {
       if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
 
       const pointsToAdd = typeof points === "number" && points > 0 ? points : 1;
-      const update = { $inc: {} };
-      update.$inc[field] = pointsToAdd;
+      // 1. First get user to calc total
+      let user = await User.findOne({ username });
+      if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
 
-      const user = await User.findOneAndUpdate(
+      // 2. Calc new total for history
+      const currentTotal = (user.addition || 0) + (user.subtraction || 0) + (user.multiplication || 0) + (user.division || 0) + (user.percent || 0);
+      const newTotal = currentTotal + pointsToAdd;
+
+      // 3. Update field AND history
+      const update = {
+        $inc: { [field]: pointsToAdd },
+        $push: { history: { date: new Date(), score: newTotal } }
+      };
+
+      user = await User.findOneAndUpdate(
         { username },
         update,
         { new: true, projection: { password: 0 } }
