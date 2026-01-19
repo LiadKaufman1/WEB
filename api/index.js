@@ -185,6 +185,7 @@ scoreFields.forEach(field => {
   api.post(`/score/${field}`, async (req, res) => {
     try {
       const { username, points, isCorrect } = req.body;
+      console.log(`[SCORE] Field: ${field}, User: ${username}, isCorrect: ${isCorrect} (${typeof isCorrect})`);
       if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
 
       const pointsToAdd = (typeof points === "number" && points > 0) ? points : 1;
@@ -194,12 +195,14 @@ scoreFields.forEach(field => {
       if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
 
       // 1. Update Global Stats
-      if (isCorrect !== false) { // Default to true if undefined
+      const isFailure = isCorrect === false || isCorrect === "false";
+
+      if (!isFailure) {
         user[field] = (user[field] || 0) + pointsToAdd;
       } else {
-        const incorrectField = `${field}_incorrect`;
-        user[incorrectField] = (user[incorrectField] || 0) + 1;
-        user.incorrect = (user.incorrect || 0) + 1; // Keep global for legacy/total tracking
+        const failField = `${field}_fail`;
+        user[failField] = (user[failField] || 0) + 1;
+        user.incorrect = (user.incorrect || 0) + 1;
       }
 
       // 2. Handle Streak

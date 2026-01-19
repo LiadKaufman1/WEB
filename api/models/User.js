@@ -7,15 +7,15 @@ const UserSchema = new mongoose.Schema({
 
   // Stats
   addition: { type: Number, default: 0 },
-  addition_incorrect: { type: Number, default: 0 },
+  addition_fail: { type: Number, default: 0 },
   subtraction: { type: Number, default: 0 },
-  subtraction_incorrect: { type: Number, default: 0 },
+  subtraction_fail: { type: Number, default: 0 },
   multiplication: { type: Number, default: 0 },
-  multiplication_incorrect: { type: Number, default: 0 },
+  multiplication_fail: { type: Number, default: 0 },
   division: { type: Number, default: 0 },
-  division_incorrect: { type: Number, default: 0 },
+  division_fail: { type: Number, default: 0 },
   percent: { type: Number, default: 0 },
-  percent_incorrect: { type: Number, default: 0 },
+  percent_fail: { type: Number, default: 0 },
 
   // Shop
   spentPoints: { type: Number, default: 0 },

@@ -19,7 +19,7 @@ export default function LearningGraph({ stats }) {
     const data = TOPICS.map(t => ({
         label: t.label,
         correct: stats?.[t.key] || 0,
-        incorrect: stats?.[`${t.key}_incorrect`] || 0
+        incorrect: stats?.[`${t.key}_fail`] || 0
     }));
 
     // Find max value for scaling
