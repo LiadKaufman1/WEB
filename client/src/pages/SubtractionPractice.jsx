@@ -131,7 +131,7 @@ export default function PracticeSubtraction() {
       await fetch(`${API_BASE}/score/subtraction`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, points, isCorrect }),
+        body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
       });
     } catch {
       // ignore

@@ -131,7 +131,7 @@ export default function PracticeMultiplication() {
       await fetch(`${API_BASE}/score/multiplication`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, points, isCorrect }),
+        body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
       });
     } catch {
       // ignore

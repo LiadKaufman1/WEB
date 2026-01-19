@@ -128,7 +128,7 @@ export default function PracticeDivision() {
       await fetch(`${API_BASE}/score/division`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, points, isCorrect }),
+        body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
       });
     } catch {
       // ignore
