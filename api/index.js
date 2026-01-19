@@ -230,7 +230,10 @@ scoreFields.forEach(field => {
         });
       }
 
+      user.markModified('history'); // Ensure Mongoose detects the change
       await user.save();
+
+      console.log(`Updated stats for ${username}: Streak=${user.streak}, HistoryLength=${user.history.length}`);
       res.json({ ok: true, streak: user.streak });
     } catch (e) {
       console.log("ERR:", e);

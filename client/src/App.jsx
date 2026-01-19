@@ -7,7 +7,6 @@ import Login from "./Login.jsx";
 import Register from "./pages/Register.jsx";
 import About from "./pages/About.jsx";
 import Start from "./pages/Start.jsx";
-import MathBot from "./components/MathBot.jsx";
 
 import AdditionPractice from "./pages/AdditionPractice.jsx";
 import SubtractionPractice from "./pages/SubtractionPractice.jsx";
@@ -168,8 +167,6 @@ export default function App() {
           © {new Date().getFullYear()} החשבון של מתי. כל הזכויות שמורות. 🐾
         </footer>
       </div>
-
-      {authed && <MathBot username={localStorage.getItem("username") || "חבר"} />}
     </div>
   );
 }
