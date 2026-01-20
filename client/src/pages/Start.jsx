@@ -231,11 +231,7 @@ export default function Stats() {
               <div className="md:col-span-2">
                 <LearningGraph stats={stats} />
               </div>
-              <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                <h4 className="font-bold text-slate-700 mb-2">עוזר אישי חכם 🧠</h4>
-                <p className="text-sm text-slate-500 mb-4">נתקעת? קבל טיפ המותאם בדיוק לנושא שאתה מתרגל כרגע.</p>
-                <SmartTip topic="multiplication" />
-              </div>
+              <div className="hidden"></div>
             </div>
 
           </div>
