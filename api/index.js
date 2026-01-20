@@ -412,6 +412,38 @@ api.get("/debug-connection", (req, res) => {
   });
 });
 
+// DEBUG: Deep User Diagnosis
+api.get("/diagnose-user", async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.json({ error: "Missing username query param" });
+
+    const exact = await User.findOne({ username });
+    const regex = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
+
+    // Count all users to see if DB is empty
+    const count = await User.countDocuments();
+
+    res.json({
+      ok: true,
+      searchedFor: username,
+      totalUsersInDB: count,
+      exactMatch: exact ? "FOUND" : "NOT_FOUND",
+      regexMatch: regex ? "FOUND" : "NOT_FOUND",
+      // Return masked data if found
+      data: regex ? {
+        id: regex._id,
+        username: regex.username,
+        score_addition: regex.addition,
+        history_len: regex.history?.length
+      } : null,
+      dbName: mongoose.connection.db ? mongoose.connection.db.databaseName : "UNKNOWN"
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 api.get("/debug-routes", (req, res) => {
   const routes = [];
   app._router.stack.forEach((middleware) => {
