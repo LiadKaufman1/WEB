@@ -131,7 +131,7 @@ export default function PracticeMultiplication() {
       // DEBUG: Visual Confirmation
       const status = isCorrect ? "SUCCESS" : "FAILURE";
 
-      const res = await fetch(`${API_BASE}/score/multiplication?t=${Date.now()}`, {
+      const res = await fetch(`${API_BASE}/score-v3/multiplication?t=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),

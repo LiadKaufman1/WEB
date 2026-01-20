@@ -160,7 +160,7 @@ export default function PracticePercent() {
       // DEBUG: Visual Confirmation
       const status = isCorrect ? "SUCCESS" : "FAILURE";
 
-      const res = await fetch(`${API_BASE}/score/percent?t=${Date.now()}`, {
+      const res = await fetch(`${API_BASE}/score-v3/percent?t=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),

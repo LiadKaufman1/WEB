@@ -129,7 +129,7 @@ export default function PracticeAddition() {
       // DEBUG: Visual Confirmation
       const status = isCorrect ? "SUCCESS" : "FAILURE";
 
-      const res = await fetch(`${API_BASE}/score/addition?t=${Date.now()}`, {
+      const res = await fetch(`${API_BASE}/score-v3/addition?t=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),

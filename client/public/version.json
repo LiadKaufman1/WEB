@@ -1,5 +1,5 @@
 {
-    "version": "release-2026-01-20-v10",
-    "timestamp": 1768916000000,
-    "last_commit": "Atomic Update for Scores"
+    "version": "release-2026-01-20-v11",
+    "timestamp": 1768917000000,
+    "last_commit": "Fix Lint + Force Route Cache Bust"
 }

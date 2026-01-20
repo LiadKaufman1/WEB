@@ -182,7 +182,7 @@ api.post("/shop/buy", async (req, res) => {
 // 🔹 Score Updates
 const scoreFields = ["addition", "subtraction", "multiplication", "division", "percent"];
 
-api.post('/score/:field', async (req, res) => {
+api.post('/score-v3/:field', async (req, res) => {
   try {
     const { field } = req.params;
     const { username, points, isCorrect } = req.body;
@@ -201,7 +201,7 @@ api.post('/score/:field', async (req, res) => {
     const pointsToAdd = (typeof points === "number" && points > 0) ? points : 1;
     const today = new Date().toLocaleDateString("en-GB"); // DD/MM/YYYY
 
-    const user = await User.findOne({ username });
+    let user = await User.findOne({ username });
     if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
 
     // 1. Update Global Stats
@@ -212,7 +212,7 @@ api.post('/score/:field', async (req, res) => {
 
     // 2. ATOMIC UPDATE for CheckCounters (Robustness against Vercel Freeze)
     const failField = `${field}_fail`;
-    let user;
+    // let user; // REMOVED DUPLICATE
 
     if (isSuccess) {
       // Atomic Increment + return new doc
