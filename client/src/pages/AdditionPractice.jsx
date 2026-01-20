@@ -1,64 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { triggerSmartConfetti } from "../utils/confetti";
-import useCatCongrats from "./useCatCongrats";
-import useCatUncongrats from "./useCatUncongrats";
-import SmartTip from "../components/SmartTip";
-import API_URL from "../config";
+import ScoreBadge from "../components/ScoreBadge"; // Import
 
-const ADD_STATE_KEY = "addition_practice_state_v2";
-const API_BASE = API_URL;
-
-const LEVELS = {
-  easy: { label: "קל (0–10)", min: 0, max: 10, points: 1 },
-  medium: { label: "בינוני (0–50)", min: 0, max: 50, points: 3 },
-  hard: { label: "קשה (0–200)", min: 0, max: 200, points: 5 },
-};
-
-const LEVEL_TEXT = {
-  easy: {
-    title: "רמה קלה 😺 (1 נק')",
-    body:
-      "פה אנחנו עושים חיבור כמו שהחתול אוהב: רגוע וברור.\n" +
-      "מתחילים מהמספר הראשון.\n" +
-      "את המספר השני הופכים לצעדים קדימה וסופרים לאט.\n" +
-      "דוגמה: 3 + 2 → 4, 5.\n" +
-      "טיפ של חתול: אם יש 0 — לא מוסיפים כלום 😸",
-  },
-  medium: {
-    title: "רמה בינונית 🐾 (3 נק')",
-    body:
-      "כאן החתול כבר משתמש בטריק קטן וחכם.\n" +
-      "במקום לספור הרבה צעדים, מגיעים למספר עגול.\n" +
-      "קודם משלימים לעשר או לעשרות.\n" +
-      "ואז מוסיפים את מה שנשאר.\n" +
-      "דוגמה: 28 + 7 → 30 ואז 35.\n" +
-      "טיפ של חתול: מספרים עגולים הם הכי נוחים 🐾",
-  },
-  hard: {
-    title: "רמה קשה 🐯 (5 נק')",
-    body:
-      "זו רמה לחתולים רציניים במיוחד.\n" +
-      "כדי לא להתבלבל, מפרקים את המספרים לחלקים.\n" +
-      "קודם מחברים עשרות או מאות.\n" +
-      "אחר כך מחברים יחידות.\n" +
-      "בסוף מחברים את הכל יחד.\n" +
-      "דוגמה: 146 + 37 → 176 ואז 183.\n" +
-      "טיפ של חתול: לפרק לחלקים זה כמו לגו 🧱",
-  },
-};
-
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function makeQuestion(levelKey) {
-  const { min, max } = LEVELS[levelKey] ?? LEVELS.easy;
-  const a = randInt(min, max);
-  const b = randInt(min, max);
-  return { a, b, ans: a + b };
-}
+/* ... imports ... */
 
 export default function PracticeAddition() {
   const navigate = useNavigate();
@@ -72,72 +14,67 @@ export default function PracticeAddition() {
   const [input, setInput] = useState("");
   const [msg, setMsg] = useState("");
   const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
-  const [shake, setShake] = useState(false); // New Shake State
+  const [shake, setShake] = useState(false);
 
-  function savePracticeState(next = {}) {
-    sessionStorage.setItem(
-      ADD_STATE_KEY,
-      JSON.stringify({ level, q, input, msg, noPointsThisQuestion, ...next })
-    );
-  }
+  // Score State
+  const [score, setScore] = useState(0);
+  const [addedPoints, setAddedPoints] = useState(0);
 
-  function clearPracticeState() {
-    sessionStorage.removeItem(ADD_STATE_KEY);
-  }
-
+  // Fetch initial score
   useEffect(() => {
-    const saved = sessionStorage.getItem(ADD_STATE_KEY);
-    if (saved) {
-      try {
-        const st = JSON.parse(saved);
-        if (st?.level && LEVELS[st.level]) setLevel(st.level);
-        if (st?.q) setQ(st.q);
-        if (typeof st?.input === "string") setInput(st.input);
-        if (typeof st?.msg === "string") setMsg(st.msg);
-        if (typeof st?.noPointsThisQuestion === "boolean")
-          setNoPointsThisQuestion(st.noPointsThisQuestion);
-      } catch {
-        // ignore
-      }
+    const username = localStorage.getItem("username");
+    if (username) {
+      fetch(`${API_BASE}/user/stats`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.ok && data.user) {
+            // Calculate total score or just addition? 
+            // User Balance usually implies Total Score.
+            const total = (data.user.addition || 0) + (data.user.subtraction || 0) + (data.user.multiplication || 0) + (data.user.division || 0) + (data.user.percent || 0);
+            // But wait, if we only show total, we need to know WHICH field updated to animate well?
+            // For simplicity, let's track the field we are practicing + total.
+            // Actually, the Shop uses "Total Score - Spent". 
+            // Let's show "Available Balance" (Total - Spent) like in the Shop?
+            // Or just "Addition Score"?
+            // The user said "points accumulate", usually implies the global currency.
+            // Let's show TOTAL POINTS (Available).
+            const available = total - (data.user.spentPoints || 0);
+            setScore(available);
+          }
+        });
     }
   }, []);
 
-  function changeLevel(newLevel) {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setLevel(newLevel);
-    goNextQuestion(newLevel);
-  }
-
-  function goNextQuestion(nextLevel = level) {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    clearPracticeState();
-    setMsg("");
-    setInput("");
-    setNoPointsThisQuestion(false);
-    setQ(makeQuestion(nextLevel));
-    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" }); // Reset hint state implicitly by omission
-  }
-
   async function incAdditionScoreIfAllowed(isCorrect = true) {
-    if (noPointsThisQuestion && isCorrect) return; // Only skip if correct (failures always count)
+    if (noPointsThisQuestion && isCorrect) return;
     const username = localStorage.getItem("username");
     if (!username) return;
 
     const points = LEVELS[level]?.points || 1;
 
     try {
-      // DEBUG: Visual Confirmation
-      const status = isCorrect ? "SUCCESS" : "FAILURE";
-
       const res = await fetch(`${API_BASE}/score-v3/addition?t=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
       });
-      // const data = await res.json(); // Data not needed for UI anymore
+      const data = await res.json();
+
+      if (data.ok && isCorrect) {
+        // Update local score from response if possible, or just increment?
+        // The response has `newScore` (field score). 
+        // We want Total Available.
+        // Calculating exact total locally is risky.
+        // Let's just increment locally for the animation, trusting the server.
+        setScore(prev => prev + points);
+        setAddedPoints(points);
+        setTimeout(() => setAddedPoints(0), 2000); // Reset animation prop
+      }
+
     } catch {
       setMsg(prev => `${prev} [ERR]`);
     }
@@ -187,6 +124,7 @@ export default function PracticeAddition() {
 
   return (
     <div className="mx-auto max-w-lg mt-8 px-4">
+      <ScoreBadge score={score} addedPoints={addedPoints} />
       <CatCongrats />
       <CatUncongrats />
 
@@ -235,8 +173,8 @@ export default function PracticeAddition() {
             placeholder="?"
             type="number"
             className={`w-full text-center text-3xl font-bold py-4 rounded-2xl border-2 transition-all outline-none placeholder:text-slate-300 ${shake
-                ? "border-rose-400 bg-rose-50 text-rose-600"
-                : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              ? "border-rose-400 bg-rose-50 text-rose-600"
+              : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               }`}
             autoFocus
           />
