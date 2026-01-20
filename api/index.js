@@ -214,30 +214,35 @@ api.post('/score-v3/:field', async (req, res) => {
     const failField = `${field}_fail`;
     let updatedUser;
 
+    // Create case-insensitive regex for username to handle whitespace/case mismatches
+    const userRegex = new RegExp(`^${username.trim()}$`, 'i');
+    console.log(`[SCORE] Attempting update for user: '${username}' (regex: ${userRegex})`);
+
     if (isSuccess) {
       updatedUser = await User.findOneAndUpdate(
-        { username },
+        { username: { $regex: userRegex } },
         {
           $inc: { [field]: pointsToAdd },
-          $set: { lastActivity: today } // Update activity here to be safe
+          $set: { lastActivity: today }
         },
-        { new: true, upsert: false }
+        { new: true, upsert: false, strict: false }
       );
     } else {
       updatedUser = await User.findOneAndUpdate(
-        { username },
+        { username: { $regex: userRegex } },
         {
-          $inc: { [failField]: 1, incorrect: 1 },
-          // On failure we don't necessarily update lastActivity for streak? 
-          // Logic said streak only on success.
+          $inc: { [failField]: 1, incorrect: 1 }
         },
-        { new: true, upsert: false }
+        { new: true, upsert: false, strict: false }
       );
     }
 
     if (!updatedUser) {
-      console.error(`[SCORE] Update failed. User ${username} not found during atomic write.`);
-      return res.status(404).json({ ok: false, error: "UPDATE_FAILED" });
+      console.error(`[SCORE] Update failed. User '${username}' not found with regex.`);
+      // Diagnosis: Try to find plain
+      const check = await User.findOne({ username });
+      console.log(`[SCORE] Diagnosis: Exact string match found? ${!!check}`);
+      return res.status(404).json({ ok: false, error: "UPDATE_FAILED_USER_NOT_FOUND", debug: { sent: username, exists: !!check } });
     }
 
     console.log(`[SCORE] Atomic Update Success. New ${field}: ${updatedUser[field]}, Fail: ${updatedUser[failField]}`);
