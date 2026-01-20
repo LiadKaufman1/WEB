@@ -1,5 +1,5 @@
 {
-    "version": "release-2026-01-20-v14",
-    "timestamp": 1768921000000,
-    "last_commit": "Add Connection Debug Endpoint"
+    "version": "release-2026-01-20-v15",
+    "timestamp": 1768923000000,
+    "last_commit": "Fix Routing: Remove Conflicts and Simplify Rewrite"
 }
