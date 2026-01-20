@@ -1,5 +1,5 @@
 {
-    "version": "debug-2026-01-20-v7",
-    "timestamp": 1768913400000,
-    "last_commit": "Explicit user.markModified"
+    "version": "debug-2026-01-20-v8",
+    "timestamp": 1768914000000,
+    "last_commit": "Fix undefined FailCount debug"
 }
