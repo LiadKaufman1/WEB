@@ -214,13 +214,15 @@ api.post('/score-v3/:field', async (req, res) => {
     const failField = `${field}_fail`;
     let updatedUser;
 
-    // Create case-insensitive regex for username to handle whitespace/case mismatches
-    const userRegex = new RegExp(`^${username.trim()}$`, 'i');
-    console.log(`[SCORE] Attempting update for user: '${username}' (regex: ${userRegex})`);
+    // Safer regex for case-insensitive match (Liad == liad)
+    // We strictly match the whole string ^...$ to avoid partial matches
+    const safeRegex = { $regex: `^${username.trim()}$`, $options: 'i' };
+
+    console.log(`[SCORE] Attempting update for user: '${username}'`);
 
     if (isSuccess) {
       updatedUser = await User.findOneAndUpdate(
-        { username: { $regex: userRegex } },
+        { username: safeRegex },
         {
           $inc: { [field]: pointsToAdd },
           $set: { lastActivity: today }
@@ -229,7 +231,7 @@ api.post('/score-v3/:field', async (req, res) => {
       );
     } else {
       updatedUser = await User.findOneAndUpdate(
-        { username: { $regex: userRegex } },
+        { username: safeRegex },
         {
           $inc: { [failField]: 1, incorrect: 1 }
         },
@@ -238,10 +240,9 @@ api.post('/score-v3/:field', async (req, res) => {
     }
 
     if (!updatedUser) {
-      console.error(`[SCORE] Update failed. User '${username}' not found with regex.`);
-      // Diagnosis: Try to find plain
-      const check = await User.findOne({ username });
-      console.log(`[SCORE] Diagnosis: Exact string match found? ${!!check}`);
+      console.error(`[SCORE] Update failed.`);
+      // Fallback check
+      const check = await User.findOne({ username: safeRegex });
       return res.status(404).json({ ok: false, error: "UPDATE_FAILED_USER_NOT_FOUND", debug: { sent: username, exists: !!check } });
     }
 
@@ -418,8 +419,10 @@ api.get("/diagnose-user", async (req, res) => {
     const { username } = req.query;
     if (!username) return res.json({ error: "Missing username query param" });
 
+    const safeRegex = { $regex: `^${username.trim()}$`, $options: 'i' };
+
     const exact = await User.findOne({ username });
-    const regex = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
+    const regex = await User.findOne({ username: safeRegex });
 
     // Count all users to see if DB is empty
     const count = await User.countDocuments();

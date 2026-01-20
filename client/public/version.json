@@ -1,5 +1,5 @@
 {
-    "version": "release-2026-01-20-v23",
-    "timestamp": 1768936000000,
-    "last_commit": "Add User Diagnosis Route"
+    "version": "release-2026-01-20-v25",
+    "timestamp": 1768940000000,
+    "last_commit": "Fix JS Syntax Error in Regex Construction"
 }
