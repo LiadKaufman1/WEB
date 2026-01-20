@@ -193,6 +193,10 @@ api.post('/score/:field', async (req, res) => {
 
     console.log(`[SCORE] Field: ${field}, User: ${username}, isCorrect: ${isCorrect} (${typeof isCorrect})`);
     if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+    if (isCorrect === undefined) {
+      console.error("MISSING_IS_CORRECT: Client is likely outdated.");
+      return res.status(400).json({ ok: false, error: "MISSING_IS_CORRECT" });
+    }
 
     const pointsToAdd = (typeof points === "number" && points > 0) ? points : 1;
     const today = new Date().toLocaleDateString("en-GB"); // DD/MM/YYYY
