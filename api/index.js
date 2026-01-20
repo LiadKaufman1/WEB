@@ -321,12 +321,16 @@ api.post('/score-v3/:field', async (req, res) => {
       console.error("History update error (non-fatal):", err);
     }
 
+    const dbName = mongoose.connection.db ? mongoose.connection.db.databaseName : "UNKNOWN";
+
     res.json({
       ok: true,
-      streak: updatedUser.streak, // Might be stale if we didn't update it in the first op, but score is correct.
+      streak: updatedUser.streak,
       debug: {
         isSuccess,
         field,
+        dbName,
+        failField,
         newScore: updatedUser[field],
         newFail: updatedUser[failField]
       }

@@ -1,5 +1,5 @@
 {
-    "version": "release-2026-01-20-v12",
-    "timestamp": 1768918000000,
-    "last_commit": "Separate Atomic Updates for Score and History"
+    "version": "release-2026-01-20-v13",
+    "timestamp": 1768920000000,
+    "last_commit": "Fix Atomic Strict Mode & Debug DB Name"
 }
