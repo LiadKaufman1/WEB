@@ -1,5 +1,5 @@
 {
-    "version": "release-2026-01-20-v13",
-    "timestamp": 1768920000000,
-    "last_commit": "Fix Atomic Strict Mode & Debug DB Name"
+    "version": "release-2026-01-20-v14",
+    "timestamp": 1768921000000,
+    "last_commit": "Add Connection Debug Endpoint"
 }

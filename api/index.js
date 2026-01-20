@@ -394,6 +394,19 @@ api.get('/user/:slug', async (req, res) => {
 
 // 🔹 Debug Ping
 api.get("/ping", (req, res) => res.json({ msg: "pong", version: "v8", time: new Date() }));
+
+api.get("/debug-connection", (req, res) => {
+  const uri = process.env.MONGO_URI || "FALLBACK_HARDCODED";
+  const maskedUri = uri.replace(/:([^:@]+)@/, ":****@");
+  res.json({
+    ok: true,
+    maskedUri,
+    dbName: mongoose.connection.db ? mongoose.connection.db.databaseName : "DISCONNECTED",
+    readyState: mongoose.connection.readyState,
+    host: mongoose.connection.host
+  });
+});
+
 api.get("/debug-routes", (req, res) => {
   const routes = [];
   app._router.stack.forEach((middleware) => {
