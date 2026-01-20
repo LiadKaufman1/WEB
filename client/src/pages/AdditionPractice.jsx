@@ -126,6 +126,9 @@ export default function PracticeAddition() {
     const points = LEVELS[level]?.points || 1;
 
     try {
+      // DEBUG: Blocking Alert
+      if (!isCorrect) alert(`STOP! Sending Failure Report.\nisCorrect: ${isCorrect}`);
+
       const res = await fetch(`${API_BASE}/score/addition?t=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
