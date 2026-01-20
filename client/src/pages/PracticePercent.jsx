@@ -165,8 +165,8 @@ export default function PracticePercent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
       });
-      const data = await res.json();
-      setMsg(prev => `${prev} [SRV:${data.debug?.isSuccess ? "ACPT" : "REJ"}] [Field:${data.debug?.failFieldName}] [Count:${data.debug?.newFail}]`);
+      // const data = await res.json();
+      // setMsg(prev => `${prev} [SRV:${data.debug?.isSuccess ? "ACPT" : "REJ"}] [Field:${data.debug?.failFieldName}] [Count:${data.debug?.newFail}]`);
     } catch {
       setMsg(prev => `${prev} [ERR]`);
     }
