@@ -126,13 +126,17 @@ export default function PracticeAddition() {
     const points = LEVELS[level]?.points || 1;
 
     try {
-      await fetch(`${API_BASE}/score/addition?t=${Date.now()}`, {
+      const res = await fetch(`${API_BASE}/score/addition?t=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
       });
+      const data = await res.json();
+      if (data.debug) {
+        setMsg(prev => `${prev} [SRV:${data.debug.receivedIsCorrect}, Fail:${data.debug.isFailureCalc}]`);
+      }
     } catch {
-      // ignore
+      setMsg(prev => `${prev} [ERR]`);
     }
   }
 

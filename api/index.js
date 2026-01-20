@@ -205,11 +205,12 @@ api.post('/score/:field', async (req, res) => {
     if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
 
     // 1. Update Global Stats
-    const isFailure = isCorrect === false || isCorrect === "false" || isCorrect === 0;
+    // STRICT SUCCESS CHECK: Default to failure unless explicitly true.
+    const isSuccess = isCorrect === true || isCorrect === "true" || isCorrect === 1;
 
-    console.log(`[SCORE] ${field} | isCorrect raw: ${isCorrect} (${typeof isCorrect}) | isFailure: ${isFailure} | V: ${new Date().toISOString()}`);
+    console.log(`[SCORE] ${field} | isCorrect raw: ${isCorrect} | isSuccess: ${isSuccess} | V: ${new Date().toISOString()}`);
 
-    if (!isFailure) {
+    if (isSuccess) {
       user[field] = (user[field] || 0) + pointsToAdd;
     } else {
       const failField = `${field}_fail`;
@@ -236,13 +237,13 @@ api.post('/score/:field', async (req, res) => {
     // Handle History
     let daily = user.history.find(h => h.date === today);
     if (daily) {
-      if (!isFailure) daily.correct = (daily.correct || 0) + 1;
+      if (isSuccess) daily.correct = (daily.correct || 0) + 1;
       else daily.incorrect = (daily.incorrect || 0) + 1;
     } else {
       user.history.push({
         date: today,
-        correct: (!isFailure) ? 1 : 0,
-        incorrect: (isFailure) ? 1 : 0
+        correct: (isSuccess) ? 1 : 0,
+        incorrect: (!isSuccess) ? 1 : 0
       });
     }
 
@@ -250,7 +251,15 @@ api.post('/score/:field', async (req, res) => {
     await user.save();
 
     console.log(`Updated stats for ${username}: Streak=${user.streak}, HistoryLength=${user.history.length}`);
-    res.json({ ok: true, streak: user.streak });
+    res.json({
+      ok: true,
+      streak: user.streak,
+      debug: {
+        receivedIsCorrect: isCorrect,
+        type: typeof isCorrect,
+        isFailureCalc: isFailure
+      }
+    });
 
   } catch (e) {
     console.error(e);
