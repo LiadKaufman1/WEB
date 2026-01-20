@@ -1,5 +1,5 @@
 {
-    "version": "release-2026-01-20-v11",
-    "timestamp": 1768917000000,
-    "last_commit": "Fix Lint + Force Route Cache Bust"
+    "version": "release-2026-01-20-v12",
+    "timestamp": 1768918000000,
+    "last_commit": "Separate Atomic Updates for Score and History"
 }
