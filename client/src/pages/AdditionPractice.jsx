@@ -136,7 +136,7 @@ export default function PracticeAddition() {
       });
       const data = await res.json();
 
-      setMsg(prev => `${prev} [Client:${status}] [Server:${data.debug?.isSuccess === true ? "ACPT" : "REJ"}]`);
+      setMsg(prev => `${prev} [Client:${status}] [Server:${data.debug?.isSuccess === true ? "ACPT" : "REJ"}] [FailCount:${data.debug?.newFail}]`);
     } catch {
       setMsg(prev => `${prev} [ERR]`);
     }

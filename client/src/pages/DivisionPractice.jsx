@@ -134,7 +134,7 @@ export default function PracticeDivision() {
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
       });
       const data = await res.json();
-      setMsg(prev => `${prev} [Client:${status}] [Server:${data.debug?.isSuccess === true ? "ACPT" : "REJ"}]`);
+      setMsg(prev => `${prev} [Client:${status}] [Server:${data.debug?.isSuccess === true ? "ACPT" : "REJ"}] [FailCount:${data.debug?.newFail}]`);
     } catch {
       setMsg(prev => `${prev} [ERR]`);
     }

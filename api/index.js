@@ -219,7 +219,7 @@ api.post('/score/:field', async (req, res) => {
     }
 
     // 2. Handle Streak
-    if (user.lastActivity !== today) {
+    if (isSuccess && user.lastActivity !== today) {
       // Check if yesterday was the last activity
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -257,7 +257,9 @@ api.post('/score/:field', async (req, res) => {
       debug: {
         receivedIsCorrect: isCorrect,
         type: typeof isCorrect,
-        isSuccess: isSuccess
+        isSuccess: isSuccess,
+        newScore: user[field],
+        newFail: user[`${field}_fail`]
       }
     });
 
