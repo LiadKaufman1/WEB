@@ -1,5 +1,5 @@
 {
-    "version": "release-2026-01-20-v15",
-    "timestamp": 1768923000000,
-    "last_commit": "Fix Routing: Remove Conflicts and Simplify Rewrite"
+    "version": "release-2026-01-20-v16",
+    "timestamp": 1768925000000,
+    "last_commit": "DELETE Ghost File client/api/[...route].js"
 }
