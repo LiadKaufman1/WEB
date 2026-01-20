@@ -179,90 +179,101 @@ api.post("/shop/buy", async (req, res) => {
 });
 
 // 🔹 Score Updates
+// 🔹 Score Updates
 const scoreFields = ["addition", "subtraction", "multiplication", "division", "percent"];
 
-scoreFields.forEach(field => {
-  api.post(`/score/${field}`, async (req, res) => {
-    try {
-      const { username, points, isCorrect } = req.body;
-      console.log(`[SCORE] Field: ${field}, User: ${username}, isCorrect: ${isCorrect} (${typeof isCorrect})`);
-      if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+api.post('/score/:field', async (req, res) => {
+  try {
+    const { field } = req.params;
+    const { username, points, isCorrect } = req.body;
 
-      const pointsToAdd = (typeof points === "number" && points > 0) ? points : 1;
-      const today = new Date().toLocaleDateString("en-GB"); // DD/MM/YYYY
-
-      const user = await User.findOne({ username });
-      if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
-
-      // 1. Update Global Stats
-      // Validating input: explicit check for false values
-      const isFailure = isCorrect === false || isCorrect === "false" || isCorrect === 0;
-
-      console.log(`[SCORE] ${field} | isCorrect raw: ${isCorrect} (${typeof isCorrect}) | isFailure: ${isFailure} | V: ${new Date().toISOString()}`);
-
-      if (!isFailure) {
-        user[field] = (user[field] || 0) + pointsToAdd;
-      } else {
-        const failField = `${field}_fail`;
-        user[failField] = (user[failField] || 0) + 1;
-        user.incorrect = (user.incorrect || 0) + 1;
-      }
-
-      // 2. Handle Streak
-
-      if (user.lastActivity !== today) {
-        // Check if yesterday was the last activity
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yStr = yesterday.toLocaleDateString("en-GB");
-
-        if (user.lastActivity === yStr) {
-          user.streak = (user.streak || 0) + 1;
-        } else {
-          // Missed a day or first time
-          user.streak = 1;
-        }
-        user.lastActivity = today;
-      }
-
-      // Handle History
-      let daily = user.history.find(h => h.date === today);
-      if (daily) {
-        if (isCorrect !== false) daily.correct = (daily.correct || 0) + 1;
-        else daily.incorrect = (daily.incorrect || 0) + 1;
-      } else {
-        user.history.push({
-          date: today,
-          correct: (isCorrect !== false) ? 1 : 0,
-          incorrect: (isCorrect === false) ? 1 : 0
-        });
-      }
-
-      user.markModified('history'); // Ensure Mongoose detects the change
-      await user.save();
-
-      console.log(`Updated stats for ${username}: Streak=${user.streak}, HistoryLength=${user.history.length}`);
-      res.json({ ok: true, streak: user.streak });
-    } catch (e) {
-      console.log("ERR:", e);
-      res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+    if (!scoreFields.includes(field)) {
+      return res.status(400).json({ ok: false, error: "INVALID_FIELD" });
     }
-  });
 
-  // 🔹 Get Field Frequency
-  api.get(`/user/${field}-f`, async (req, res) => {
-    try {
-      const { username } = req.query;
-      if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
-      const user = await User.findOne({ username }, { password: 0 });
-      if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
-      const key = `${field}_f`;
-      return res.json({ ok: true, [key]: user[key] ?? 1 });
-    } catch (e) {
-      console.log("ERR:", e);
-      return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+    console.log(`[SCORE] Field: ${field}, User: ${username}, isCorrect: ${isCorrect} (${typeof isCorrect})`);
+    if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+
+    const pointsToAdd = (typeof points === "number" && points > 0) ? points : 1;
+    const today = new Date().toLocaleDateString("en-GB"); // DD/MM/YYYY
+
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+
+    // 1. Update Global Stats
+    const isFailure = isCorrect === false || isCorrect === "false" || isCorrect === 0;
+
+    console.log(`[SCORE] ${field} | isCorrect raw: ${isCorrect} (${typeof isCorrect}) | isFailure: ${isFailure} | V: ${new Date().toISOString()}`);
+
+    if (!isFailure) {
+      user[field] = (user[field] || 0) + pointsToAdd;
+    } else {
+      const failField = `${field}_fail`;
+      user[failField] = (user[failField] || 0) + 1;
+      user.incorrect = (user.incorrect || 0) + 1;
     }
-  });
+
+    // 2. Handle Streak
+    if (user.lastActivity !== today) {
+      // Check if yesterday was the last activity
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yStr = yesterday.toLocaleDateString("en-GB");
+
+      if (user.lastActivity === yStr) {
+        user.streak = (user.streak || 0) + 1;
+      } else {
+        // Missed a day or first time
+        user.streak = 1;
+      }
+      user.lastActivity = today;
+    }
+
+    // Handle History
+    let daily = user.history.find(h => h.date === today);
+    if (daily) {
+      if (!isFailure) daily.correct = (daily.correct || 0) + 1;
+      else daily.incorrect = (daily.incorrect || 0) + 1;
+    } else {
+      user.history.push({
+        date: today,
+        correct: (!isFailure) ? 1 : 0,
+        incorrect: (isFailure) ? 1 : 0
+      });
+    }
+
+    user.markModified('history');
+    await user.save();
+
+    console.log(`Updated stats for ${username}: Streak=${user.streak}, HistoryLength=${user.history.length}`);
+    res.json({ ok: true, streak: user.streak });
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
+
+// 🔹 Get Field Frequency (Dynamic)
+api.get('/user/:slug', async (req, res) => {
+  const { slug } = req.params;
+  if (!slug.endsWith('-f')) return res.status(404).json({ error: "Not found" });
+
+  const field = slug.replace('-f', '');
+  const scoreFields = ["addition", "subtraction", "multiplication", "division", "percent"];
+  if (!scoreFields.includes(field)) return res.status(400).json({ error: "Invalid field" });
+
+  try {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+    const user = await User.findOne({ username }, { password: 0 });
+    if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+    const key = `${field}_f`;
+    return res.json({ ok: true, [key]: user[key] ?? 1 });
+  } catch (e) {
+    console.log("ERR:", e);
+    return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
 });
 
 // 🔹 Parent Mode Data
