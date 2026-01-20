@@ -257,7 +257,7 @@ api.post('/score/:field', async (req, res) => {
       debug: {
         receivedIsCorrect: isCorrect,
         type: typeof isCorrect,
-        isFailureCalc: isFailure
+        isSuccess: isSuccess
       }
     });
 

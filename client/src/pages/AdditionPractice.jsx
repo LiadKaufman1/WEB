@@ -126,8 +126,8 @@ export default function PracticeAddition() {
     const points = LEVELS[level]?.points || 1;
 
     try {
-      // DEBUG: Blocking Alert
-      if (!isCorrect) alert(`STOP! Sending Failure Report.\nisCorrect: ${isCorrect}`);
+      // DEBUG: Visual Confirmation
+      const status = isCorrect ? "SUCCESS" : "FAILURE";
 
       const res = await fetch(`${API_BASE}/score/addition?t=${Date.now()}`, {
         method: "POST",
@@ -135,9 +135,8 @@ export default function PracticeAddition() {
         body: JSON.stringify({ username, points, isCorrect: !!isCorrect }),
       });
       const data = await res.json();
-      if (data.debug) {
-        setMsg(prev => `${prev} [SRV:${data.debug.receivedIsCorrect}, Fail:${data.debug.isFailureCalc}]`);
-      }
+
+      setMsg(prev => `${prev} [Client:${status}] [Server:${data.debug?.isSuccess === true ? "ACPT" : "REJ"}]`);
     } catch {
       setMsg(prev => `${prev} [ERR]`);
     }
