@@ -1,5 +1,5 @@
 {
-    "version": "debug-2026-01-20-v5",
-    "timestamp": 1768912400000,
-    "last_commit": "Show DB Values"
+    "version": "debug-2026-01-20-v6",
+    "timestamp": 1768912800000,
+    "last_commit": "Fix Mongoose Access with .get()"
 }

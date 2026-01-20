@@ -210,13 +210,23 @@ api.post('/score/:field', async (req, res) => {
 
     console.log(`[SCORE] ${field} | isCorrect raw: ${isCorrect} | isSuccess: ${isSuccess} | V: ${new Date().toISOString()}`);
 
+    const failField = `${field}_fail`;
+
     if (isSuccess) {
-      user[field] = (user[field] || 0) + pointsToAdd;
+      const currentScore = user.get(field) || 0;
+      user.set(field, currentScore + pointsToAdd);
     } else {
-      const failField = `${field}_fail`;
-      user[failField] = (user[failField] || 0) + 1;
+      const currentFail = user.get(failField) || 0;
+      user.set(failField, currentFail + 1);
       user.incorrect = (user.incorrect || 0) + 1;
     }
+
+    // ... [Streak Logic skipped for brevity in replace, need to ensure I don't delete it]
+    // Wait, replace_file_content replaces the block. I need to be careful not to delete logic.
+    // I will target only the if/else block.
+
+    // ...
+
 
     // 2. Handle Streak
     if (isSuccess && user.lastActivity !== today) {
@@ -258,8 +268,10 @@ api.post('/score/:field', async (req, res) => {
         receivedIsCorrect: isCorrect,
         type: typeof isCorrect,
         isSuccess: isSuccess,
-        newScore: user[field],
-        newFail: user[`${field}_fail`]
+        field: field,
+        failField: `${field}_fail`,
+        newScore: user.get(field),
+        newFail: user.get(`${field}_fail`)
       }
     });
 
