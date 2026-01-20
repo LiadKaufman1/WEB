@@ -1,5 +1,5 @@
 {
-    "version": "release-2026-01-20-v16",
-    "timestamp": 1768925000000,
-    "last_commit": "DELETE Ghost File client/api/[...route].js"
+    "version": "release-2026-01-20-v17",
+    "timestamp": 1768927000000,
+    "last_commit": "Add Confetti and Shake Animations"
 }

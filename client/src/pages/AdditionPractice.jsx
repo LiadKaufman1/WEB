@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { triggerSmartConfetti } from "../utils/confetti";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
 import SmartTip from "../components/SmartTip";
@@ -70,6 +72,7 @@ export default function PracticeAddition() {
   const [input, setInput] = useState("");
   const [msg, setMsg] = useState("");
   const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
+  const [shake, setShake] = useState(false); // New Shake State
 
   function savePracticeState(next = {}) {
     sessionStorage.setItem(
@@ -158,7 +161,8 @@ export default function PracticeAddition() {
       savePracticeState({ msg: m });
 
       triggerCatFx();
-      incAdditionScoreIfAllowed(true); // Send success
+      triggerSmartConfetti(); // 🎉 CONFETTI
+      incAdditionScoreIfAllowed(true);
 
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => goNextQuestion(level), 1500);
@@ -166,9 +170,12 @@ export default function PracticeAddition() {
     }
 
     triggerBadCatFx();
+    setShake(true); // 🫨 SHAKE
+    setTimeout(() => setShake(false), 500); // Reset shake
+
     const m = "❌ טעות, נסה שוב";
     setMsg(m);
-    incAdditionScoreIfAllowed(false); // Send failure
+    incAdditionScoreIfAllowed(false);
     savePracticeState({ msg: m });
   }
 
@@ -213,7 +220,11 @@ export default function PracticeAddition() {
         </div>
 
         {/* Answer Input */}
-        <div className="mb-6">
+        <motion.div
+          className="mb-6"
+          animate={shake ? { x: [-10, 10, -10, 10, 0] } : {}}
+          transition={{ duration: 0.4 }}
+        >
           <input
             value={input}
             onChange={(e) => {
@@ -223,10 +234,13 @@ export default function PracticeAddition() {
             onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
             placeholder="?"
             type="number"
-            className="w-full text-center text-3xl font-bold py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-300"
+            className={`w-full text-center text-3xl font-bold py-4 rounded-2xl border-2 transition-all outline-none placeholder:text-slate-300 ${shake
+                ? "border-rose-400 bg-rose-50 text-rose-600"
+                : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              }`}
             autoFocus
           />
-        </div>
+        </motion.div>
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
