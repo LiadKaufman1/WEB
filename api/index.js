@@ -210,27 +210,33 @@ api.post('/score/:field', async (req, res) => {
 
     console.log(`[SCORE] ${field} | isCorrect raw: ${isCorrect} | isSuccess: ${isSuccess} | V: ${new Date().toISOString()}`);
 
+    // 2. ATOMIC UPDATE for CheckCounters (Robustness against Vercel Freeze)
     const failField = `${field}_fail`;
+    let user;
 
     if (isSuccess) {
-      const currentScore = user.get(field) || 0;
-      user.set(field, currentScore + pointsToAdd);
+      // Atomic Increment + return new doc
+      user = await User.findOneAndUpdate(
+        { username },
+        { $inc: { [field]: pointsToAdd } },
+        { new: true }
+      );
     } else {
-      const currentFail = user.get(failField) || 0;
-      user.set(failField, currentFail + 1);
-      user.incorrect = (user.incorrect || 0) + 1;
+      // Atomic Increment Fail + Incorrect
+      user = await User.findOneAndUpdate(
+        { username },
+        { $inc: { [failField]: 1, incorrect: 1 } },
+        { new: true }
+      );
     }
 
-    // ... [Streak Logic skipped for brevity in replace, need to ensure I don't delete it]
-    // Wait, replace_file_content replaces the block. I need to be careful not to delete logic.
-    // I will target only the if/else block.
+    if (!user) return res.status(404).json({ ok: false, error: "UPDATE_FAILED_NO_USER" });
 
-    // ...
+    // 3. Handle Streak & History (Secondary Operations)
+    // We do this in memory then save. Even if Vercel freezes here, the Score is SAFE.
 
-
-    // 2. Handle Streak
+    // Streak Logic
     if (isSuccess && user.lastActivity !== today) {
-      // Check if yesterday was the last activity
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yStr = yesterday.toLocaleDateString("en-GB");
@@ -238,13 +244,12 @@ api.post('/score/:field', async (req, res) => {
       if (user.lastActivity === yStr) {
         user.streak = (user.streak || 0) + 1;
       } else {
-        // Missed a day or first time
         user.streak = 1;
       }
       user.lastActivity = today;
     }
 
-    // Handle History
+    // History Logic
     let daily = user.history.find(h => h.date === today);
     if (daily) {
       if (isSuccess) daily.correct = (daily.correct || 0) + 1;
@@ -258,7 +263,7 @@ api.post('/score/:field', async (req, res) => {
     }
 
     user.markModified('history');
-    await user.save();
+    await user.save(); // Final Save for History/Streak
 
     console.log(`Updated stats for ${username}: Streak=${user.streak}, HistoryLength=${user.history.length}`);
     res.json({
