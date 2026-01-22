@@ -60,7 +60,10 @@ function ProtectedRoute({ children }) {
 }
 
 function PublicOnlyRoute({ children }) {
-  if (isLoggedIn()) return <Navigate to="/start" replace />;
+  if (isLoggedIn()) {
+    const target = localStorage.getItem("role") === "parent" ? "/parents" : "/start";
+    return <Navigate to={target} replace />;
+  }
   return children;
 }
 
