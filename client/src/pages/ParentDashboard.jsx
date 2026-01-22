@@ -63,9 +63,9 @@ export default function ParentDashboard() {
         }
     }
 
-    // --- Data Preparation for Grouped Bar Chart (Pivoted by Subject) ---
+    // --- Data Preparation for Percentage Chart ---
     // X-Axis = Subjects
-    // Bars = Children (Grouped)
+    // Bars = Success Percentage
     const subjects = [
         { key: 'addition', label: 'חיבור' },
         { key: 'subtraction', label: 'חיסור' },
@@ -77,10 +77,18 @@ export default function ParentDashboard() {
     const chartData = subjects.map(subj => {
         const entry = { name: subj.label };
         children.forEach(child => {
-            // Store score
-            entry[child.username] = child[subj.key] || 0;
-            // Store mistakes
-            entry[`${child.username}_mistakes`] = child[`${subj.key}Mistakes`] || 0;
+            const correct = child[subj.key] || 0;
+            const mistakes = child[`${subj.key}Mistakes`] || 0;
+            const total = correct + mistakes;
+
+            // Calculate Percentage (avoid NaN)
+            const percentage = total === 0 ? 0 : Math.round((correct / total) * 100);
+
+            // Store percentage for the bar height
+            entry[child.username] = percentage;
+
+            // Store details for tooltip
+            entry[`${child.username}_details`] = { correct, mistakes, total };
         });
         return entry;
     });
@@ -90,15 +98,20 @@ export default function ParentDashboard() {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-white p-4 border border-slate-100 shadow-xl rounded-xl text-right" dir="rtl">
-                    <p className="font-bold text-slate-800 mb-2">{label}</p>
+                    <p className="font-bold text-slate-800 mb-2 underline decoration-blue-200 decoration-2 underline-offset-4">{label}</p>
                     {payload.map((entry, index) => {
                         const childName = entry.dataKey;
-                        const mistakes = entry.payload[`${childName}_mistakes`];
+                        const details = entry.payload[`${childName}_details`];
                         return (
-                            <p key={index} style={{ color: entry.fill }} className="text-sm font-semibold">
-                                {childName}: {entry.value} נק'
-                                <span className="text-slate-400 text-xs mr-2">(טעויות: {mistakes})</span>
-                            </p>
+                            <div key={index} className="mb-2 last:mb-0">
+                                <p style={{ color: entry.fill }} className="text-sm font-black flex justify-between gap-4">
+                                    <span>{childName}</span>
+                                    <span>{entry.value}%</span>
+                                </p>
+                                <p className="text-xs text-slate-500 font-medium">
+                                    {details.correct} נכונות | {details.mistakes} טעויות
+                                </p>
+                            </div>
                         );
                     })}
                 </div>
@@ -124,19 +137,25 @@ export default function ParentDashboard() {
             {/* Top Section: Graphs & Create Form */}
             <div className="grid lg:grid-cols-3 gap-8 mb-12 animate-slide-in">
 
-                {/* Left: Grouped Bar Chart */}
+                {/* Left: Percentage Graph */}
                 <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                     <h3 className="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
-                        <span>�</span> השוואת הישגים לפי נושא
+                        <span>🎯</span> אחוזי הצלחה
                     </h3>
-                    <p className="text-sm text-slate-400 mb-6">העמודות מראות את הניקוד לכל ילד בכל נושא</p>
+                    <p className="text-sm text-slate-400 mb-6">מציג את הדיוק של כל ילד (נכון מול טעויות)</p>
 
                     <div className="h-[400px] w-full" dir="ltr">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData} barGap={8}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                 <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 13, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                <YAxis
+                                    tick={{ fill: '#64748b', fontSize: 12 }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    domain={[0, 100]}
+                                    tickFormatter={(val) => `${val}%`}
+                                />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Legend iconType="circle" />
 
