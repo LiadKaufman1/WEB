@@ -23,9 +23,10 @@ export const buyItem = async (req, res) => {
             return res.status(400).json({ ok: false, error: "NOT_ENOUGH_POINTS" });
         }
 
-        if (user.inventory.includes(itemName)) {
-            return res.status(400).json({ ok: false, error: "ALREADY_OWNED" });
-        }
+        // Unlimited purchases allowed now
+        // if (user.inventory.includes(itemName)) {
+        //     return res.status(400).json({ ok: false, error: "ALREADY_OWNED" });
+        // }
 
         user.spentPoints = (user.spentPoints || 0) + itemCost;
         user.inventory.push(itemName);

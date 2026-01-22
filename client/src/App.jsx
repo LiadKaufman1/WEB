@@ -16,6 +16,7 @@ import PracticePercent from "./pages/PracticePercent.jsx";
 
 import CatStory from "./pages/CatStory.jsx";
 import ParentDashboard from "./pages/ParentDashboard.jsx";
+import Inventory from "./pages/Inventory.jsx";
 
 function NotFound() {
   return (
@@ -135,6 +136,7 @@ export default function App() {
                       <Tab to="/multiplication" icon="✖️">כפל</Tab>
                       <Tab to="/division" icon="➗">חילוק</Tab>
                       <Tab to="/percent" icon="％">אחוזים</Tab>
+                      <Tab to="/inventory" icon="🎒">התיק שלי</Tab>
                     </>
                   )}
                   <Tab to="/about" icon="ℹ️">אודות</Tab>
@@ -165,6 +167,7 @@ export default function App() {
             <Route path="/multiplication" element={<ProtectedRoute><MultiplicationPractice /></ProtectedRoute>} />
             <Route path="/division" element={<ProtectedRoute><DivisionPractice /></ProtectedRoute>} />
             <Route path="/percent" element={<ProtectedRoute><PracticePercent /></ProtectedRoute>} />
+            <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
 
             <Route path="/cat-story" element={<ProtectedRoute><CatStory /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

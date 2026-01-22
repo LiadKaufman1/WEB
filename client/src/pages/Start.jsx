@@ -89,7 +89,6 @@ export default function Stats() {
           loadStats(); // Reload to update balance
         } else {
           if (data.error === "NOT_ENOUGH_POINTS") alert("אין לך מספיק נקודות 😔");
-          else if (data.error === "ALREADY_OWNED") alert("כבר יש לך את זה! 🤓");
           else alert("שגיאה בקנייה: " + data.error);
         }
       } catch (e) {
@@ -172,26 +171,26 @@ export default function Stats() {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
                 {SHOP_ITEMS.map(item => {
-                  const owned = inventory.includes(item.id);
+                  const count = inventory.filter(i => i === item.id).length;
                   const canBuy = balance >= item.cost;
                   return (
-                    <div key={item.id} className={`bg-white p-4 rounded-xl border-2 transition-all text-center flex flex-col items-center gap-2 ${owned ? 'border-emerald-200 opacity-80' : 'border-amber-200 shadow-sm hover:scale-105'}`}>
+                    <div key={item.id} className={`bg-white p-4 rounded-xl border-2 transition-all text-center flex flex-col items-center gap-2 border-amber-200 shadow-sm hover:scale-105`}>
                       <div className="text-4xl mb-2">{item.emoji}</div>
                       <div className="font-bold text-slate-800 text-sm">{item.name}</div>
 
-                      {owned ? (
-                        <div className="bg-emerald-100 text-emerald-700 text-xs py-1 px-3 rounded-full font-bold mt-auto">
-                          שלך! ✅
+                      {count > 0 && (
+                        <div className="text-xs font-bold text-emerald-600 mb-1">
+                          יש לך: {count}
                         </div>
-                      ) : (
-                        <button
-                          disabled={!canBuy || buying === item.id}
-                          onClick={() => buyItem(item)}
-                          className={`mt-auto text-xs py-1.5 px-3 rounded-lg font-bold w-full transition-all ${canBuy ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200 shadow-md' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
-                        >
-                          {buying === item.id ? '...' : `קנה ב-${item.cost}`}
-                        </button>
                       )}
+
+                      <button
+                        disabled={!canBuy || buying === item.id}
+                        onClick={() => buyItem(item)}
+                        className={`mt-auto text-xs py-1.5 px-3 rounded-lg font-bold w-full transition-all ${canBuy ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200 shadow-md' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                      >
+                        {buying === item.id ? '...' : `קנה ב-${item.cost}`}
+                      </button>
                     </div>
                   )
                 })}
