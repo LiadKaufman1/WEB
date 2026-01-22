@@ -5,7 +5,6 @@ import { authService } from "../services/auth.service";
 export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [age, setAge] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,9 +14,10 @@ export default function Register() {
     setMsg("");
     setLoading(true);
 
-    const ageNum = parseInt(age);
-    if (isNaN(ageNum) || ageNum < 4 || ageNum > 120) {
-      setMsg("הגיל חייב להיות בין 4 ל-120");
+    const ageNum = 99; // Default age for parents as requested
+    // Validation for username/password only
+    if (username.length < 2 || password.length < 2) {
+      setMsg("שם משתמש וסיסמה חייבים להכיל לפחות 2 תווים");
       setLoading(false);
       return;
     }
@@ -73,20 +73,7 @@ export default function Register() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">גיל</label>
-            <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all text-right"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              placeholder="גיל ההורה"
-              type="number"
-              min="4"
-              max="120"
-              required
-              dir="auto"
-            />
-          </div>
+
 
           <button
             type="submit"
