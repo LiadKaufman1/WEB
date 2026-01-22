@@ -150,7 +150,7 @@ export default function App() {
 
         <main className="fade-in">
           <Routes>
-            <Route path="/" element={<Navigate to={authed ? "/start" : "/login"} replace />} />
+            <Route path="/" element={<Navigate to={!authed ? "/login" : localStorage.getItem("role") === "parent" ? "/parents" : "/start"} replace />} />
             <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
             <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
             <Route path="/parents" element={<ParentDashboard />} />
