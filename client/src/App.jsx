@@ -13,10 +13,10 @@ import SubtractionPractice from "./pages/SubtractionPractice.jsx";
 import MultiplicationPractice from "./pages/MultiplicationPractice.jsx";
 import DivisionPractice from "./pages/DivisionPractice.jsx";
 import PracticePercent from "./pages/PracticePercent.jsx";
+import Inventory from "./pages/Inventory.jsx";
 
 import CatStory from "./pages/CatStory.jsx";
 import ParentDashboard from "./pages/ParentDashboard.jsx";
-import Inventory from "./pages/Inventory.jsx";
 
 function NotFound() {
   return (
@@ -50,43 +50,6 @@ function Tab({ to, icon, children }) {
     </NavLink>
   );
 }
-
-// ... existing code ...
-
-{/* Navigation */ }
-<nav className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto pb-1 md:pb-0 scrollbar-hide w-full md:w-auto">
-  {!authed ? (
-    <>
-      <Tab to="/login" icon="🔐">כניסה</Tab>
-      <Tab to="/register" icon="📝">הרשמה</Tab>
-      <Tab to="/about" icon="ℹ️">אודות</Tab>
-    </>
-  ) : (
-    <>
-      {localStorage.getItem("role") === "parent" ? (
-        <Tab to="/parents" icon="👨‍👩‍👧‍👦">הורים</Tab>
-      ) : (
-        <>
-          <Tab to="/start" icon="🏠">בית</Tab>
-          <Tab to="/addition" icon="➕">חיבור</Tab>
-          <Tab to="/subtraction" icon="➖">חיסור</Tab>
-          <Tab to="/multiplication" icon="✖️">כפל</Tab>
-          <Tab to="/division" icon="➗">חילוק</Tab>
-          <Tab to="/percent" icon="％">אחוזים</Tab>
-          <Tab to="/inventory" icon="🎒">תיק</Tab>
-        </>
-      )}
-      <Tab to="/about" icon="ℹ️">אודות</Tab>
-
-      <button
-        onClick={handleLogout}
-        className="mr-1 inline-flex items-center gap-1.5 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-600 transition-all hover:bg-rose-100 hover:text-rose-700 active:scale-95 whitespace-nowrap"
-      >
-        <span>יציאה</span>
-      </button>
-    </>
-  )}
-</nav>
 
 function isLoggedIn() {
   return localStorage.getItem("isLoggedIn") === "1";
@@ -154,7 +117,7 @@ export default function App() {
             </div>
 
             {/* Navigation */}
-            <nav className="flex flex-wrap justify-center gap-2">
+            <nav className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto pb-1 md:pb-0 scrollbar-hide w-full md:w-auto">
               {!authed ? (
                 <>
                   <Tab to="/login" icon="🔐">כניסה</Tab>
@@ -173,14 +136,14 @@ export default function App() {
                       <Tab to="/multiplication" icon="✖️">כפל</Tab>
                       <Tab to="/division" icon="➗">חילוק</Tab>
                       <Tab to="/percent" icon="％">אחוזים</Tab>
-                      <Tab to="/inventory" icon="🎒">התיק שלי</Tab>
+                      <Tab to="/inventory" icon="🎒">תיק</Tab>
                     </>
                   )}
                   <Tab to="/about" icon="ℹ️">אודות</Tab>
 
                   <button
                     onClick={handleLogout}
-                    className="mr-2 inline-flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-600 transition-all hover:bg-rose-100 hover:text-rose-700 active:scale-95"
+                    className="mr-1 inline-flex items-center gap-1.5 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-600 transition-all hover:bg-rose-100 hover:text-rose-700 active:scale-95 whitespace-nowrap"
                   >
                     <span>יציאה</span>
                   </button>
