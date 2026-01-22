@@ -14,6 +14,13 @@ const UserSchema = new mongoose.Schema({
     division: { type: Number, default: 0 },
     percent: { type: Number, default: 0 },
 
+    // Mistakes
+    additionMistakes: { type: Number, default: 0 },
+    subtractionMistakes: { type: Number, default: 0 },
+    multiplicationMistakes: { type: Number, default: 0 },
+    divisionMistakes: { type: Number, default: 0 },
+    percentMistakes: { type: Number, default: 0 },
+
     // Shop
     spentPoints: { type: Number, default: 0 },
     inventory: { type: [String], default: [] }

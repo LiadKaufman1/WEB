@@ -47,6 +47,34 @@ export const updateScore = async (req, res) => {
     }
 };
 
+export const recordMistake = async (req, res) => {
+    try {
+        const { field } = req.params;
+        const validFields = scoreFields; // reuse existing list
+        if (!validFields.includes(field)) {
+            return res.status(400).json({ ok: false, error: "INVALID_FIELD" });
+        }
+
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ ok: false, error: "NO_USERNAME" });
+
+        const mistakeField = `${field}Mistakes`;
+        const update = { $inc: { [mistakeField]: 1 } };
+
+        const user = await User.findOneAndUpdate(
+            { username },
+            update,
+            { new: true, projection: { password: 0 } }
+        );
+
+        if (!user) return res.status(404).json({ ok: false, error: "NO_USER" });
+        res.json({ ok: true, [mistakeField]: user[mistakeField] });
+    } catch (e) {
+        console.log("ERR:", e);
+        res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+    }
+};
+
 export const getFieldFrequency = async (req, res) => {
     try {
         const { field } = req.params;

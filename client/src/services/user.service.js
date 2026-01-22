@@ -7,6 +7,10 @@ export const userService = {
     updateScore: async (field, username, points) => {
         return apiClient.post(`/score/${field}`, { username, points });
     },
+
+    recordMistake: async (field, username) => {
+        return apiClient.post(`/score/${field}/mistake`, { username });
+    },
     getFieldFrequency: async (field, username) => {
         // Note: Original endpoint used GET and params/query
         // But apiClient.get appends to base URL.

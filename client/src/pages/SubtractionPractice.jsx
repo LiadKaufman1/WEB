@@ -162,6 +162,11 @@ export default function PracticeSubtraction() {
     const m = "❌ טעות, נסה שוב";
     setMsg(m);
     savePracticeState({ msg: m });
+
+    const username = localStorage.getItem("username");
+    if (username && !noPointsThisQuestion) {
+      userService.recordMistake("subtraction", username).catch(() => { });
+    }
   }
 
   useEffect(() => {

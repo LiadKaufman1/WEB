@@ -191,6 +191,11 @@ export default function PracticePercent() {
     const m = "❌ טעות, נסה שוב";
     setMsg(m);
     savePracticeState({ msg: m });
+
+    const username = localStorage.getItem("username");
+    if (username && !noPointsThisQuestion) {
+      userService.recordMistake("percent", username).catch(() => { });
+    }
   }
 
   useEffect(() => {

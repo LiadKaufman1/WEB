@@ -160,6 +160,12 @@ export default function PracticeAddition() {
     const m = "❌ טעות, נסה שוב";
     setMsg(m);
     savePracticeState({ msg: m });
+
+    // Track mistake
+    const username = localStorage.getItem("username");
+    if (username && !noPointsThisQuestion) {
+      userService.recordMistake("addition", username).catch(() => { });
+    }
   }
 
   useEffect(() => {

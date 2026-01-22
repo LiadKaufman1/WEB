@@ -229,11 +229,11 @@ export default function ParentDashboard() {
                                 <tr>
                                     <th className="px-6 py-4">שם</th>
                                     <th className="px-6 py-4">גיל</th>
-                                    <th className="px-6 py-4 text-green-600">חיבור</th>
-                                    <th className="px-6 py-4 text-amber-600">חיסור</th>
-                                    <th className="px-6 py-4 text-blue-600">כפל</th>
-                                    <th className="px-6 py-4 text-purple-600">חילוק</th>
-                                    <th className="px-6 py-4 text-rose-600">סה"כ</th>
+                                    <th className="px-6 py-4 text-green-600">חיבור (טעויות)</th>
+                                    <th className="px-6 py-4 text-amber-600">חיסור (טעויות)</th>
+                                    <th className="px-6 py-4 text-blue-600">כפל (טעויות)</th>
+                                    <th className="px-6 py-4 text-purple-600">חילוק (טעויות)</th>
+                                    <th className="px-6 py-4 text-rose-600">סה"כ נקודות</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -243,10 +243,18 @@ export default function ParentDashboard() {
                                         <tr key={child._id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-6 py-4 font-bold text-slate-800">{child.username}</td>
                                             <td className="px-6 py-4 text-slate-500">{child.age}</td>
-                                            <td className="px-6 py-4 font-medium">{child.addition || 0}</td>
-                                            <td className="px-6 py-4 font-medium">{child.subtraction || 0}</td>
-                                            <td className="px-6 py-4 font-medium">{child.multiplication || 0}</td>
-                                            <td className="px-6 py-4 font-medium">{child.division || 0}</td>
+                                            <td className="px-6 py-4 font-medium">
+                                                {child.addition || 0} <span className="text-rose-400 text-xs">({child.additionMistakes || 0})</span>
+                                            </td>
+                                            <td className="px-6 py-4 font-medium">
+                                                {child.subtraction || 0} <span className="text-rose-400 text-xs">({child.subtractionMistakes || 0})</span>
+                                            </td>
+                                            <td className="px-6 py-4 font-medium">
+                                                {child.multiplication || 0} <span className="text-rose-400 text-xs">({child.multiplicationMistakes || 0})</span>
+                                            </td>
+                                            <td className="px-6 py-4 font-medium">
+                                                {child.division || 0} <span className="text-rose-400 text-xs">({child.divisionMistakes || 0})</span>
+                                            </td>
                                             <td className="px-6 py-4 font-black text-slate-800">{total}</td>
                                         </tr>
                                     );

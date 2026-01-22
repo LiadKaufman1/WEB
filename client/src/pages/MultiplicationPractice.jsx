@@ -162,6 +162,11 @@ export default function PracticeMultiplication() {
     const m = "❌ טעות, נסה שוב";
     setMsg(m);
     savePracticeState({ msg: m });
+
+    const username = localStorage.getItem("username");
+    if (username && !noPointsThisQuestion) {
+      userService.recordMistake("multiplication", username).catch(() => { });
+    }
   }
 
   useEffect(() => {
