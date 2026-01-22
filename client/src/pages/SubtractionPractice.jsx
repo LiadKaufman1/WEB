@@ -83,6 +83,7 @@ export default function PracticeSubtraction() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const saved = sessionStorage.getItem(SUB_STATE_KEY);
     if (saved) {
       try {

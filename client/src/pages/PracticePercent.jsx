@@ -112,6 +112,7 @@ export default function PracticePercent() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const saved = sessionStorage.getItem(PERCENT_STATE_KEY);
     if (saved) {
       try {

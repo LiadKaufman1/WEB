@@ -80,6 +80,7 @@ export default function PracticeDivision() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const saved = sessionStorage.getItem(DIV_STATE_KEY);
     if (saved) {
       try {

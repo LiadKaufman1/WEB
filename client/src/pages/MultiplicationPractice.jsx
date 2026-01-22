@@ -83,6 +83,7 @@ export default function PracticeMultiplication() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const saved = sessionStorage.getItem(MULT_STATE_KEY);
     if (saved) {
       try {
