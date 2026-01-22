@@ -1,0 +1,20 @@
+{
+    "name": "web-root",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "postinstall": "concurrently \"cd client && npm install\" \"cd server && npm install\"",
+        "build": "cd client && npm run build",
+        "server": "cd server && npm start",
+        "client": "cd client && npm run dev",
+        "dev": "concurrently \"npm run server\" \"npm run client\""
+    },
+    "dependencies": {},
+    "engines": {
+        "node": "18.x"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
+    }
+}

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MathBuddy - Fun Math Learning</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Inter font (אפשר להשאיר ככה) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind config for Inter (בלי CSS משלך) -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="font-sans bg-gradient-to-br from-blue-100 to-purple-100 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-br from-indigo-500 to-purple-700 text-white p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <span class="text-3xl">🤖</span>
+        <h1 class="text-2xl font-bold">MathBuddy</h1>
+      </div>
+      <nav class="hidden md:flex space-x-6">
+        <a href="#home" class="hover:text-yellow-300 transition-colors">Home</a>
+        <a href="#practice" class="hover:text-yellow-300 transition-colors">Practice</a>
+        <a href="#dashboard" class="hover:text-yellow-300 transition-colors">Dashboard</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto p-6">
+
+    <!-- Welcome Section -->
+    <section id="home" class="text-center mb-8">
+      <div class="bg-white rounded-3xl p-8 shadow-xl shadow-black/10 mb-6">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">Hello Noa! 👋</h2>
+
+        <div class="flex justify-center items-center space-x-8 mb-6">
+          <div class="text-center">
+            <div class="text-4xl font-bold text-yellow-500" id="stars-count">127</div>
+            <div class="text-sm text-gray-600">⭐ Stars</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-green-500" id="streak-count">5</div>
+            <div class="text-sm text-gray-600">🔥 Day Streak</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-purple-500" id="level">3</div>
+            <div class="text-sm text-gray-600">🏆 Level</div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-6">
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Progress to Next Level</span>
+            <span id="progress-text">75/100 XP</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div id="progress-bar"
+              class="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-500"
+              style="width: 75%"></div>
+          </div>
+        </div>
+
+        <!-- Daily Challenge -->
+        <div class="bg-gradient-to-r from-orange-400 to-pink-400 rounded-2xl p-4 text-white mb-4">
+          <h3 class="font-bold mb-2">🎯 Daily Challenge</h3>
+          <p class="text-sm mb-3">Solve 5 addition problems and earn 20 stars!</p>
+          <button onclick="startDailyChallenge()"
+            class="bg-white text-orange-500 px-4 py-2 rounded-full font-bold hover:bg-gray-100 transition-colors">
+            Start Now
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Practice Section -->
+    <section id="practice" class="mb-8">
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- Chat Bot -->
+        <div class="bg-white rounded-3xl p-6 shadow-xl shadow-black/10">
+          <div class="flex flex-col gap-3 mb-4">
+            <h3 class="text-xl font-bold flex items-center">
+              <span class="text-2xl mr-2">🤖</span>
+              Chat with MathBot
+            </h3>
+            <div class="flex gap-2">
+              <select id="chat-topic" onchange="updateBotQuestion()"
+                class="flex-1 border border-gray-300 rounded-lg p-1 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="addition">Addition (+)</option>
+                <option value="subtraction">Subtraction (-)</option>
+                <option value="multiplication">Multiplication (×)</option>
+                <option value="division">Division (÷)</option>
+                <option value="fractions">Fractions (½)</option>
+                <option value="percentages">Percentages (%)</option>
+                <option value="random">Random 🎲</option>
+              </select>
+              <select id="chat-level" onchange="updateBotQuestion()"
+                class="w-24 border border-gray-300 rounded-lg p-1 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-2xl p-4 h-64 overflow-y-auto mb-4" id="chat-container">
+            <div class="flex items-start mb-3">
+              <div class="bg-blue-500 text-white rounded-2xl p-3 max-w-xs">
+                Hi Noa! Let's practice! I'll pick a question for you...
+              </div>
+            </div>
+          </div>
+
+          <div class="flex space-x-2">
+            <input type="text" id="chat-input" placeholder="Type your answer..."
+              class="flex-1 p-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button onclick="sendMessage()"
+              class="bg-blue-500 text-white px-6 py-3 rounded-2xl hover:bg-blue-600 transition-colors">
+              Send
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Practice -->
+        <div class="bg-white rounded-3xl p-6 shadow-xl shadow-black/10">
+          <div class="flex flex-col gap-3 mb-4">
+            <h3 class="text-xl font-bold flex items-center">
+              <span class="text-2xl mr-2">⚡</span>
+              Quick Practice
+            </h3>
+            <div class="flex gap-2">
+              <select id="practice-topic" onchange="restartQuiz()"
+                class="flex-1 border border-gray-300 rounded-lg p-1 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="addition">Addition (+)</option>
+                <option value="subtraction">Subtraction (-)</option>
+                <option value="multiplication">Multiplication (×)</option>
+                <option value="division">Division (÷)</option>
+                <option value="fractions">Fractions (½)</option>
+                <option value="percentages">Percentages (%)</option>
+                <option value="random">Random 🎲</option>
+              </select>
+              <select id="practice-level" onchange="restartQuiz()"
+                class="w-24 border border-gray-300 rounded-lg p-1 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="text-center mb-6">
+            <div class="text-4xl font-bold text-gray-800 mb-2" id="question">12 + 7 = ?</div>
+            <div class="text-sm text-gray-600">Question <span id="question-num">1</span> of 5</div>
+
+            <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+              <div class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 20%"
+                id="question-progress"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <button onclick="selectAnswer(this)"
+              class="bg-gray-100 hover:bg-blue-100 p-4 rounded-2xl font-bold transition-colors answer-btn">15</button>
+            <button onclick="selectAnswer(this)"
+              class="bg-gray-100 hover:bg-blue-100 p-4 rounded-2xl font-bold transition-colors answer-btn">19</button>
+            <button onclick="selectAnswer(this)"
+              class="bg-gray-100 hover:bg-blue-100 p-4 rounded-2xl font-bold transition-colors answer-btn">18</button>
+            <button onclick="selectAnswer(this)"
+              class="bg-gray-100 hover:bg-blue-100 p-4 rounded-2xl font-bold transition-colors answer-btn">20</button>
+          </div>
+
+          <div class="text-center">
+            <div class="text-lg font-bold text-green-600">Total Correct: <span id="correct-count">0</span></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="mb-8">
+      <div class="bg-white rounded-3xl p-6 shadow-xl shadow-black/10">
+        <h3 class="text-xl font-bold mb-6 flex items-center">
+          <span class="text-2xl mr-2">📊</span>
+          Progress Dashboard
+        </h3>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <h4 class="font-bold mb-3">Rate</h4>
+            <div class="text-3xl font-bold text-blue-500 mb-2" id="accuracy-text">0%</div>
+            <div class="text-sm text-gray-600">Answer Accuracy</div>
+            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div id="accuracy-bar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <h4 class="font-bold mb-3">Strengths</h4>
+            <div class="space-y-2" id="strengths-container">
+              <div class="text-xs text-gray-500">Keep practicing!</div>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <h4 class="font-bold mb-3">Areas to Improve</h4>
+            <div class="space-y-2" id="improvements-container">
+              <div class="text-xs text-gray-500">Keep practicing!</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-gray-200">
+          <h4 class="font-bold mb-3">Recent Activity</h4>
+          <div class="space-y-2">
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <span>Daily Challenge - Addition</span>
+              <span class="text-green-600 font-bold">4/5 ✓</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <span>Free Practice</span>
+              <span class="text-blue-600 font-bold">+15 Stars</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Achievements -->
+    <section class="mb-8">
+      <div class="bg-white rounded-3xl p-6 shadow-xl shadow-black/10">
+        <h3 class="text-xl font-bold mb-4 flex items-center">
+          <span class="text-2xl mr-2">🏅</span>
+          Achievements
+        </h3>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div id="achieve-star" class="text-center p-4 bg-gray-100 rounded-2xl opacity-50 transition-all duration-500">
+            <div class="text-3xl mb-2">🌟</div>
+            <div class="font-bold text-sm">First Star</div>
+            <div class="text-xs text-gray-600">Earn 10 stars</div>
+          </div>
+          <div id="achieve-streak"
+            class="text-center p-4 bg-gray-100 rounded-2xl opacity-50 transition-all duration-500">
+            <div class="text-3xl mb-2">🔥</div>
+            <div class="font-bold text-sm">5-Day Streak</div>
+            <div class="text-xs text-gray-600">Practice 5 times</div>
+          </div>
+          <div id="achieve-perfect"
+            class="text-center p-4 bg-gray-100 rounded-2xl opacity-50 transition-all duration-500">
+            <div class="text-3xl mb-2">🎯</div>
+            <div class="font-bold text-sm">Perfect Score</div>
+            <div class="text-xs text-gray-600">10 in a row</div>
+          </div>
+          <div id="achieve-king" class="text-center p-4 bg-gray-100 rounded-2xl opacity-50 transition-all duration-500">
+            <div class="text-3xl mb-2">👑</div>
+            <div class="font-bold text-sm">Math King</div>
+            <div class="text-xs text-gray-600">Reach Level 5</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Notification Toast -->
+    <div id="notification-toast"
+      class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-2xl shadow-2xl p-4 flex items-center space-x-4 transition-all duration-500 opacity-0 pointer-events-none translate-y-[-20px] z-50">
+      <div class="text-4xl">🎉</div>
+      <div>
+        <h4 class="font-bold text-lg text-purple-600" id="toast-title">Achievement Unlocked!</h4>
+        <div class="text-sm text-gray-600" id="toast-message">You earned the First Star!</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JS -->
+  <script>
+    // --- Persistence & Data ---
+    const defaultData = {
+      stars: 127,
+      streak: 5,
+      level: 3,
+      xp: 75,
+      correctAnswers: 0,
+      totalAttempts: 0,
+      consecutiveCorrect: 0,
+      topicStats: {},
+      // e.g. { addition: { correct: 5, total: 10 } }
+      unlockedAchievements: [] // Array of IDs
+    };
+
+    let userData = loadProgress();
+
+    // One-time Data Reset (Fresh Start)
+    if (!userData.hasResetHistory) {
+      userData.stars = 0;
+      userData.xp = 0;
+      userData.level = 1;
+      userData.streak = 0;
+      userData.correctAnswers = 0;
+      userData.totalAttempts = 0;
+      userData.consecutiveCorrect = 0;
+      userData.topicStats = {};
+      userData.unlockedAchievements = [];
+      userData.hasResetHistory = true;
+      saveProgress();
+    }
+
+    // Data Consistency Check (Migration)
+    // If correctAnswers exists but totalAttempts is 0 (from new feature), fix it.
+    // User requested to reset accuracy stats to ensure correct calculation from now on.
+    if (userData.correctAnswers > 0 || userData.totalAttempts > 0) {
+      userData.correctAnswers = 0;
+      userData.totalAttempts = 0;
+      userData.topicStats = {};
+      userData.consecutiveCorrect = 0; // Fix: Reset streak too
+    }
+    // Old migration check removed
+    if (false) {
+      userData.totalAttempts = userData.correctAnswers;
+    }
+
+    function loadProgress() {
+      const saved = localStorage.getItem('mathBuddyData');
+      if (saved) {
+        return { ...defaultData, ...JSON.parse(saved) };
+      }
+      return { ...defaultData };
+    }
+
+    function saveProgress() {
+      localStorage.setItem('mathBuddyData', JSON.stringify(userData));
+    }
+
+    // Auto-save wrapper for state updates
+    function updateState(fn) {
+      if (fn) fn();
+      saveProgress();
+      updateStarsDisplay();
+      updateDashboard();
+      checkAchievements();
+    }
+
+    // --- Stats Logic ---
+    function recordAnswer(isCorrect, topic) {
+      userData.totalAttempts++;
+
+      // Init topic stats if missing
+      if (!userData.topicStats) userData.topicStats = {};
+      if (!userData.topicStats[topic]) userData.topicStats[topic] = { correct: 0, total: 0 };
+
+      userData.topicStats[topic].total++;
+
+      if (isCorrect) {
+        userData.correctAnswers++; // Lifetime
+        userData.consecutiveCorrect++;
+        userData.topicStats[topic].correct++;
+      } else {
+        userData.consecutiveCorrect = 0;
+      }
+    }
+
+    function updateDashboard() {
+      // 1. Accuracy
+      const total = userData.totalAttempts || 1; // avoid divide by zero
+      const accuracy = Math.round((userData.correctAnswers / total) * 100);
+
+      const accText = document.getElementById('accuracy-text');
+      const accBar = document.getElementById('accuracy-bar');
+
+      if (accText) accText.textContent = `${accuracy}%`;
+      if (accBar) accBar.style.width = `${accuracy}%`;
+
+      // 2. Strengths & Weaknesses
+      const stats = userData.topicStats || {};
+      const topics = Object.keys(stats);
+
+      if (topics.length > 0) {
+        // Sort by accuracy (descending)
+        const sorted = topics.sort((a, b) => {
+          const accA = stats[a].correct / stats[a].total;
+          const accB = stats[b].correct / stats[b].total;
+          return accB - accA;
+        });
+
+        const strengthContainer = document.getElementById('strengths-container');
+        const weakContainer = document.getElementById('improvements-container');
+
+        // Top 2
+        if (strengthContainer) {
+          const top = sorted.slice(0, 2);
+          strengthContainer.innerHTML = top.map(t =>
+            `<div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm capitalize">${t} ✓</div>`
+          ).join('');
+        }
+
+        // Bottom 2 (if we have enough data, say at least 3 topics or just define bottom as whatever is left?)
+        // Let's take the last 2 if length >= 2 and they are different from top
+        if (weakContainer && sorted.length >= 1) {
+          // If only 1 topic, it's a strength. If 2, 1 strength 1 weak?
+          // Let's just say weakness is anything below 50% or just bottom list? 
+          // Simple: Bottom 2 from sorted list
+          const bottom = sorted.slice(-2).reverse(); // Worst first? Or just list them.
+          // Filter out if they are same as top (e.g. only 1 or 2 topics total)
+          const distinctBottom = bottom.filter(t => !sorted.slice(0, 1).includes(t));
+
+          weakContainer.innerHTML = distinctBottom.map(t =>
+            `<div class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm capitalize">${t}</div>`
+          ).join('');
+
+          if (distinctBottom.length === 0) {
+            weakContainer.innerHTML = `<div class="text-xs text-gray-500">Keep practicing new topics!</div>`;
+          }
+        }
+      }
+    }
+
+    function checkAchievements() {
+      // 1. First Star (10 stars)
+      if (userData.stars >= 10) checkAndUnlock('achieve-star', 'bg-yellow-100', 'First Star', 'You earned your first 10 stars!');
+
+      // 2. Streak (5 days)
+      if (userData.streak >= 5) checkAndUnlock('achieve-streak', 'bg-green-100', 'On Fire!', '5-Day Streak unlocked!');
+
+      // 3. Perfect Score (10 in a row)
+      if (userData.consecutiveCorrect >= 10) checkAndUnlock('achieve-perfect', 'bg-blue-100', 'Perfect Score', '10 correct answers in a row!');
+
+      // 4. Math King (Level 5)
+      if (userData.level >= 5) checkAndUnlock('achieve-king', 'bg-purple-100', 'Math King', 'You reached Level 5!');
+    }
+
+    function checkAndUnlock(id, colorClass, title, msg) {
+      if (!userData.unlockedAchievements) userData.unlockedAchievements = [];
+
+      if (!userData.unlockedAchievements.includes(id)) {
+        userData.unlockedAchievements.push(id);
+        unlockAchievement(id, colorClass);
+        showNotification(title, msg);
+        playSuccessSound();
+        saveProgress(); // Ensure we don't celebrate again
+      } else {
+        // Already unlocked, ensure UI is persistent
+        unlockAchievement(id, colorClass);
+      }
+    }
+
+    function unlockAchievement(id, colorClass) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('opacity-50', 'bg-gray-100');
+        el.classList.add(colorClass, 'shadow-lg', 'scale-105');
+      }
+    }
+
+    // --- Celebration Features ---
+    function showNotification(title, message) {
+      const toast = document.getElementById('notification-toast');
+      const tTitle = document.getElementById('toast-title');
+      const tMsg = document.getElementById('toast-message');
+
+      if (toast && tTitle && tMsg) {
+        tTitle.textContent = title;
+        tMsg.textContent = message;
+
+        // Show
+        toast.classList.remove('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+
+        // Hide after 4s
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+        }, 4000);
+      }
+    }
+
+    function playSuccessSound() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        const ctx = new AudioContext();
+
+        // Play a major triad (C5, E5, G5)
+        const notes = [523.25, 659.25, 783.99];
+        const now = ctx.currentTime;
+
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + (i * 0.1));
+
+          gain.gain.setValueAtTime(0.1, now + (i * 0.1));
+          gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.1) + 0.5);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + (i * 0.1));
+          osc.stop(now + (i * 0.1) + 0.5);
+        });
+      } catch (e) {
+        console.log('Audio not supported');
+      }
+    }
+
+    function generateSingleQuestion(topic, level) {
+      // Default to random if "random" or undefined
+      if (!topic || topic === "random") {
+        const topics = ["addition", "subtraction", "multiplication", "division", "fractions", "percentages"];
+        topic = topics[Math.floor(Math.random() * topics.length)];
+      }
+
+      // Default level
+      if (!level) level = "easy";
+
+      // Level Ranges
+      let maxNum = 20;
+      if (level === "medium") maxNum = 50;
+      if (level === "hard") maxNum = 100;
+
+      let questionStr = "";
+      let correctAns = "";
+      const distractorSet = new Set();
+
+      // Helper to add distractions
+      const addDistractors = (correctVal, isFraction = false, denominator = 1) => {
+        distractorSet.add(correctVal.toString()); // Add correct answer first to avoid dupes
+
+        let attempts = 0;
+        while (distractorSet.size < 4 && attempts < 50) {
+          attempts++;
+          let d;
+
+          if (isFraction) {
+            // Fraction distractor: just change numerator
+            const num = parseInt(correctVal.split('/')[0]);
+            const offset = Math.floor(Math.random() * 5) + 1;
+            const sign = Math.random() > 0.5 ? 1 : -1;
+            let newNum = num + (offset * sign);
+            if (newNum <= 0) newNum = 1;
+            d = `${newNum}/${denominator}`;
+          } else {
+            const offset = Math.floor(Math.random() * (maxNum / 2)) + 1; // wider range for distractions
+            const sign = Math.random() > 0.5 ? 1 : -1;
+            d = (parseInt(correctVal) + (offset * sign)).toString();
+            if (parseInt(d) < 0) d = "0";
+          }
+
+          distractorSet.add(d);
+        }
+      };
+
+      if (topic === "addition" || topic === "subtraction") {
+        const isPlus = (topic === "addition");
+        let a = Math.floor(Math.random() * maxNum) + 1;
+        let b = Math.floor(Math.random() * maxNum) + 1;
+
+        // Harder level adjustments
+        if (level === 'hard' && Math.random() > 0.5) {
+          a += 50; b += 50;
+        }
+
+        let val;
+        let symbol;
+
+        if (isPlus) {
+          val = a + b;
+          symbol = "+";
+        } else {
+          if (a < b) [a, b] = [b, a];
+          val = a - b;
+          symbol = "-";
+        }
+        questionStr = `${a} ${symbol} ${b} = ?`;
+        correctAns = val.toString();
+        addDistractors(correctAns, false);
+
+      } else if (topic === "multiplication") {
+        let range = 9; let min = 2; // Easy: 2-10
+        if (level === "medium") { range = 12; min = 2; } // 2-14
+        if (level === "hard") { range = 19; min = 2; } // 2-20
+
+        const a = Math.floor(Math.random() * range) + min;
+        const b = Math.floor(Math.random() * range) + min;
+        questionStr = `${a} × ${b} = ?`;
+        correctAns = (a * b).toString();
+        addDistractors(correctAns, false);
+
+      } else if (topic === "division") {
+        let range = 9; let min = 2;
+        if (level === "medium") range = 12;
+        if (level === "hard") range = 19;
+
+        const a = Math.floor(Math.random() * range) + min;
+        const b = Math.floor(Math.random() * range) + min;
+        const product = a * b;
+        questionStr = `${product} ÷ ${a} = ?`;
+        correctAns = b.toString();
+        addDistractors(correctAns, false);
+
+      } else if (topic === "fractions") {
+        const denoms = [2, 3, 4, 5, 8, 10];
+        const d = denoms[Math.floor(Math.random() * denoms.length)];
+
+        let n1 = Math.floor(Math.random() * (d - 1)) + 1;
+        let n2 = Math.floor(Math.random() * (d - 1)) + 1;
+
+        const isPlus = Math.random() > 0.5;
+        if (isPlus) {
+          questionStr = `${n1}/${d} + ${n2}/${d} = ?`;
+          correctAns = `${n1 + n2}/${d}`;
+        } else {
+          if (n1 < n2) [n1, n2] = [n2, n1];
+          questionStr = `${n1}/${d} - ${n2}/${d} = ?`;
+          correctAns = `${n1 - n2}/${d}`;
+        }
+        addDistractors(correctAns, true, d);
+
+      } else if (topic === "percentages") {
+        // A% of B
+        let percent, base;
+
+        if (level === "easy") {
+          // 10, 20, 50 % of multiples of 10
+          const p = [10, 20, 50];
+          percent = p[Math.floor(Math.random() * p.length)];
+          base = (Math.floor(Math.random() * 10) + 1) * 10; // 10..100
+        } else if (level === "medium") {
+          // 5, 25, 75
+          const p = [5, 25, 75];
+          percent = p[Math.floor(Math.random() * p.length)];
+          base = (Math.floor(Math.random() * 20) + 1) * 10; // 10..200
+        } else {
+          // Random 1-100%
+          percent = Math.floor(Math.random() * 99) + 1;
+          base = Math.floor(Math.random() * 200) + 1;
+        }
+
+        const result = (percent / 100) * base;
+        // Ensure integer result mostly for easy/medium
+        if (level !== "hard" && !Number.isInteger(result)) {
+          // Retry simple recursive fallback or simpler: force easy
+          return generateSingleQuestion("percentages", "easy");
+        }
+
+        // Formatting
+        // If result is float, fix to 1 decimal
+        const resStr = Number.isInteger(result) ? result.toString() : result.toFixed(1);
+
+        questionStr = `${percent}% of ${base} = ?`;
+        correctAns = resStr;
+
+        // Custom distractor logic for float/int
+        distractorSet.add(correctAns);
+        while (distractorSet.size < 4) {
+          const off = Math.floor(Math.random() * (base / 10)) + 1;
+          const s = Math.random() > 0.5 ? 1 : -1;
+          let val = parseFloat(correctAns) + (off * s);
+          if (val < 0) val = 0;
+          const d = Number.isInteger(val) ? val.toString() : val.toFixed(1);
+          distractorSet.add(d);
+        }
+      }
+
+      // Final shuffle
+      const answersArr = Array.from(distractorSet).sort(() => Math.random() - 0.5);
+
+      return {
+        question: questionStr,
+        answers: answersArr, // Strings
+        correct: correctAns // String
+      };
+    }
+
+    function generateQuiz(topic = null, level = null) {
+      if (!topic) {
+        const el = document.getElementById('practice-topic');
+        topic = el ? el.value : 'random';
+      }
+      if (!level) {
+        const el = document.getElementById('practice-level');
+        level = el ? el.value : 'easy';
+      }
+      return Array.from({ length: 5 }, () => generateSingleQuestion(topic, level));
+    }
+
+    // Initialize
+    let questions; // = generateQuiz(); // Done in init now
+    let botExpectedAnswer;
+
+    // Bot Initialization
+    // We want the bot to start with a question immediately based on default topic (addition)
+    // But verify if we want to overwrite the hardcoded text or just start fresh.
+    // Let's create an init function for Bot similar to Quiz.
+
+    // We'll initialize bot state in the script bottom or verify logic below.
+
+    let currentQuestionIndex = 0;
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+      const chatContainer = document.getElementById('chat-container');
+
+      // User Message
+      chatContainer.innerHTML += `
+        <div class="flex justify-end mb-3">
+          <div class="bg-green-500 text-white rounded-2xl p-3 max-w-xs">
+            ${message}
+          </div>
+        </div>
+      `;
+
+      setTimeout(() => {
+        let botResponse = "";
+
+        // Flexible validation (string vs string OR value vs value)
+        const userVal = parseAnswer(message);
+        const correctVal = parseAnswer(botExpectedAnswer);
+
+        // Exact string match OR numeric match within tolerance
+        const isCorrect = (message === botExpectedAnswer) ||
+          (!isNaN(userVal) && !isNaN(correctVal) && Math.abs(userVal - correctVal) < 0.001);
+
+        if (isCorrect) {
+          updateState(() => {
+            userData.stars += 5;
+            userData.xp += 10;
+            const topicEl = document.getElementById('chat-topic');
+            const topic = topicEl ? topicEl.value : 'random';
+            recordAnswer(true, topic);
+          });
+
+          const topicEl = document.getElementById('chat-topic');
+          const topic = topicEl ? topicEl.value : 'random';
+          const levelEl = document.getElementById('chat-level');
+          const level = levelEl ? levelEl.value : 'easy';
+
+          const nextQ = generateSingleQuestion(topic, level);
+          botExpectedAnswer = nextQ.correct;
+
+          botResponse = `Excellent! That's right. Next: What is ${nextQ.question.replace(' = ?', '')}?`;
+        } else {
+          // Smart Feedback
+          if (!botExpectedAnswer) {
+            // Init
+            const topicEl = document.getElementById('chat-topic');
+            const topic = topicEl ? topicEl.value : 'random';
+            const levelEl = document.getElementById('chat-level');
+            const level = levelEl ? levelEl.value : 'easy';
+
+            const nextQ = generateSingleQuestion(topic, level);
+            botExpectedAnswer = nextQ.correct;
+            botResponse = `Let's start! What is ${nextQ.question.replace(' = ?', '')}?`;
+          } else {
+            // Analyze Error
+            const userNum = parseFloat(message);
+            const correctNum = parseFloat(botExpectedAnswer);
+
+            if (!isNaN(userNum) && !isNaN(correctNum)) {
+              if (userNum > correctNum) {
+                botResponse = "Too high! Try a smaller number. 📉";
+              } else {
+                botResponse = "Too low! Try a bigger number. 📈";
+              }
+            } else {
+              // String-based answers (fractions)
+              botResponse = "Not quite. Check your calculation! 🧮";
+            }
+
+            // Record fail
+            const topicEl = document.getElementById('chat-topic');
+            const topic = topicEl ? topicEl.value : 'random';
+            updateState(() => {
+              recordAnswer(false, topic);
+            });
+          }
+        }
+
+        chatContainer.innerHTML += `
+          <div class="flex items-start mb-3">
+            <div class="bg-blue-500 text-white rounded-2xl p-3 max-w-xs">
+              ${botResponse}
+            </div>
+          </div>
+        `;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }, 1000);
+
+      input.value = '';
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function selectAnswer(btnElement) {
+      // Compare strings now!
+      const answer = btnElement.textContent; // String
+      const currentQ = questions[currentQuestionIndex];
+      const buttons = document.querySelectorAll('.answer-btn');
+
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === currentQ.correct) {
+          btn.classList.add('bg-green-500', 'text-white');
+        } else if (btn.textContent === answer && answer !== currentQ.correct) {
+          btn.classList.add('bg-red-500', 'text-white');
+        }
+      });
+
+      if (answer === currentQ.correct) {
+        updateState(() => {
+          // userData.correctAnswers++; // Handled in recordAnswer now? 
+          // Wait, recordAnswer increments it too. We should avoid double counting.
+          // Let's rely on recordAnswer for the stats, and just add specific bonus here.
+          userData.stars += 3;
+          userData.xp += 5;
+
+          // We don't have topic handy in selectAnswer context easily unless we look it up or store it in questions
+          // But we can get it from the dropdown
+          const topicEl = document.getElementById('practice-topic');
+          const topic = topicEl ? topicEl.value : 'random';
+          recordAnswer(true, topic);
+        });
+        document.getElementById('correct-count').textContent = userData.correctAnswers;
+      } else {
+        // Record incorrect
+        const topicEl = document.getElementById('practice-topic');
+        const topic = topicEl ? topicEl.value : 'random';
+        updateState(() => {
+          recordAnswer(false, topic);
+        });
+      }
+
+      setTimeout(() => nextQuestion(), 1500);
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex >= questions.length) {
+        document.getElementById('question').textContent = `Finished! ${userData.correctAnswers}/${questions.length} correct!`;
+        document.querySelector('.grid.grid-cols-2.gap-3').innerHTML = `
+          <button onclick="restartQuiz()" class="col-span-2 bg-blue-500 text-white p-4 rounded-2xl font-bold hover:bg-blue-600 transition-colors">
+            Start Again
+          </button>
+        `;
+        return;
+      }
+
+      const currentQ = questions[currentQuestionIndex];
+      document.getElementById('question').textContent = currentQ.question;
+      document.getElementById('question-num').textContent = currentQuestionIndex + 1;
+
+      const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+      document.getElementById('question-progress').style.width = progress + '%';
+
+      const buttons = document.querySelectorAll('.answer-btn');
+      buttons.forEach((btn, index) => {
+        btn.textContent = currentQ.answers[index];
+        btn.disabled = false;
+        btn.className = 'bg-gray-100 hover:bg-blue-100 p-4 rounded-2xl font-bold transition-colors answer-btn';
+        // Reset colors
+        btn.classList.remove('bg-green-500', 'text-white', 'bg-red-500');
+        btn.classList.add('bg-gray-100', 'hover:bg-blue-100');
+      });
+    }
+
+    function restartQuiz() {
+      questions = generateQuiz(); // Will read dropdown inside generateQuiz
+      currentQuestionIndex = 0;
+      // userData.correctAnswers = 0; // REMOVED RESET to keep history
+      document.getElementById('correct-count').textContent = userData.correctAnswers; // Show total
+
+      const currentQ = questions[0];
+      document.getElementById('question').textContent = currentQ.question;
+      document.getElementById('question-num').textContent = '1';
+      document.getElementById('question-progress').style.width = '20%';
+
+      // Regenerate buttons with the new answers
+      const answersHtml = currentQ.answers.map(ans =>
+        `<button onclick="selectAnswer(this)" class="bg-gray-100 hover:bg-blue-100 p-4 rounded-2xl font-bold transition-colors answer-btn">${ans}</button>`
+      ).join('');
+
+      document.querySelector('.grid.grid-cols-2.gap-3').innerHTML = answersHtml;
+    }
+
+    function startDailyChallenge() {
+      alert('Daily Challenge Starting! 🎯');
+    }
+
+    // Helper to parse fractions or decimals
+    function parseAnswer(val) {
+      if (!val) return NaN;
+      val = val.toString().trim();
+      if (val.includes('/')) {
+        const parts = val.split('/');
+        if (parts.length === 2) {
+          return parseFloat(parts[0]) / parseFloat(parts[1]);
+        }
+      }
+      return parseFloat(val);
+    }
+
+    // New function for immediate bot updates
+    function updateBotQuestion() {
+      const topicEl = document.getElementById('chat-topic');
+      const topic = topicEl ? topicEl.value : 'random';
+      const levelEl = document.getElementById('chat-level');
+      const level = levelEl ? levelEl.value : 'easy';
+
+      const nextQ = generateSingleQuestion(topic, level);
+      botExpectedAnswer = nextQ.correct;
+
+      const chatContainer = document.getElementById('chat-container');
+      const topicName = topic.charAt(0).toUpperCase() + topic.slice(1);
+
+      chatContainer.innerHTML += `
+        <div class="flex items-start mb-3">
+          <div class="bg-blue-500 text-white rounded-2xl p-3 max-w-xs">
+            Okay, switching to <b>${topicName} (${level})</b>! <br/>
+            What is ${nextQ.question.replace(' = ?', '')}?
+          </div>
+        </div>
+      `;
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function updateStarsDisplay() {
+      document.getElementById('stars-count').textContent = userData.stars;
+    }
+
+    // Init Logic
+    // Start the Quiz 
+    restartQuiz();
+
+    // Init Bot
+    const botStartTopic = document.getElementById('chat-topic') ? document.getElementById('chat-topic').value : 'addition';
+    const botStartLevel = document.getElementById('chat-level') ? document.getElementById('chat-level').value : 'easy';
+    const initBotQ = generateSingleQuestion(botStartTopic, botStartLevel);
+    botExpectedAnswer = initBotQ.correct;
+
+    const chatContainer = document.getElementById('chat-container');
+    if (chatContainer) {
+      chatContainer.innerHTML = `
+            <div class="flex items-start mb-3">
+              <div class="bg-blue-500 text-white rounded-2xl p-3 max-w-xs">
+                Hi Noa! I'm MathBot. <br/>Let's practice! What is ${initBotQ.question.replace(' = ?', '')}?
+              </div>
+            </div>
+       `;
+    }
+
+    document.getElementById('chat-input').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // Force UI Refresh on Load
+    updateState(null); // Will call updateStarsDisplay, updateDashboard, checkAchievements
+
+  </script>
+</body>
+
+</html>
