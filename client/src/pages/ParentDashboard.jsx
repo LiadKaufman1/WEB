@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { parentService } from "../services/parent.service";
 import { useNavigate } from "react-router-dom";
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
 export default function ParentDashboard() {
@@ -12,7 +11,7 @@ export default function ParentDashboard() {
     const [loading, setLoading] = useState(false);
     const [createData, setCreateData] = useState({ username: "", password: "", age: "" });
     const [msg, setMsg] = useState("");
-    const [selectedChildId, setSelectedChildId] = useState(null);
+    const parentName = localStorage.getItem("username");
 
     // Initial Load
     useEffect(() => {
@@ -33,10 +32,6 @@ export default function ParentDashboard() {
             const data = await parentService.getChildren(parentId);
             if (data.success) {
                 setChildren(data.children);
-                // Default select first child for individual view if exists
-                if (data.children.length > 0 && !selectedChildId) {
-                    setSelectedChildId(data.children[0]._id);
-                }
             }
         } catch (e) {
             console.error("Failed to load children", e);
@@ -67,79 +62,72 @@ export default function ParentDashboard() {
     }
 
     // --- Data Preparation for Graphs ---
-
-    // 1. Comparison Data (Bar Chart) - Each bar is a child, comparing Total Score
     const comparisonData = children.map(child => ({
         name: child.username,
-        "ניקוד כללי": (child.addition || 0) + (child.subtraction || 0) + (child.multiplication || 0) + (child.division || 0) + (child.percent || 0),
-        "חיבור": child.addition || 0,
-        "חיסור": child.subtraction || 0,
-        "כפל": child.multiplication || 0,
-        "חילוק": child.division || 0,
-    }));
+        // Correct Answers (Score)
+        "חיבור (נכון)": child.addition || 0,
+        "חיסור (נכון)": child.subtraction || 0,
+        "כפל (נכון)": child.multiplication || 0,
+        "חילוק (נכון)": child.division || 0,
+        "אחוזים (נכון)": child.percent || 0,
 
-    // 2. Individual Data (Radar Chart) for Selected Child
-    const selectedChild = children.find(c => c._id === selectedChildId);
-    const radarData = selectedChild ? [
-        { subject: 'חיבור', A: selectedChild.addition || 0, fullMark: 100 },
-        { subject: 'חיסור', A: selectedChild.subtraction || 0, fullMark: 100 },
-        { subject: 'כפל', A: selectedChild.multiplication || 0, fullMark: 100 },
-        { subject: 'חילוק', A: selectedChild.division || 0, fullMark: 100 },
-        { subject: 'אחוזים', A: selectedChild.percent || 0, fullMark: 100 },
-    ] : [];
+        // Mistakes
+        "חיבור (טעות)": child.additionMistakes || 0,
+        "חיסור (טעות)": child.subtractionMistakes || 0,
+        "כפל (טעות)": child.multiplicationMistakes || 0,
+        "חילוק (טעות)": child.divisionMistakes || 0,
+        "אחוזים (טעות)": child.percentMistakes || 0,
+    }));
 
     return (
         <div className="mx-auto max-w-7xl p-6 min-h-screen">
-            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-800">לוח בקרה להורים �</h1>
-                    <p className="text-slate-500 font-medium mt-1">
-                        מחובר כהורה: <span className="text-blue-600">{localStorage.getItem("username")}</span>
-                    </p>
+                    <h1 className="text-5xl font-black text-slate-800 mb-2">
+                        ברוך הבא, <span className="text-blue-600">{parentName}</span> 👋
+                    </h1>
+                    <h2 className="text-xl text-slate-500 font-bold">
+                        לוח בקרה וניהול ילדים
+                    </h2>
                 </div>
-
-                {/* Child Quick Select for Radar */}
-                {children.length > 0 && (
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                        {children.map(child => (
-                            <button
-                                key={child._id}
-                                onClick={() => setSelectedChildId(child._id)}
-                                className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap
-                                    ${selectedChildId === child._id
-                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105"
-                                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
-                            >
-                                {child.username}
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
 
             {/* Top Section: Graphs & Create Form */}
             <div className="grid lg:grid-cols-3 gap-8 mb-12 animate-slide-in">
 
-                {/* Left: Comparison Graph */}
+                {/* Left: Comparison Graph (Detailed Stacked) */}
                 <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-                    <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <span>🏆</span> השוואת הישגים
+                    <h3 className="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <span>🏆</span> ביצועים מול טעויות
                     </h3>
-                    <div className="h-[350px] w-full" dir="ltr">
+                    <p className="text-sm text-slate-400 mb-6">עמודה ימנית: הצלחות | עמודה שמאלית: טעויות</p>
+
+                    <div className="h-[400px] w-full" dir="ltr">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={comparisonData}>
+                            <BarChart data={comparisonData} barGap={4}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 13 }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 13, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    cursor={{ fill: '#f8fafc' }}
+                                    cursor={{ fill: '#f8fafc', opacity: 0.5 }}
                                 />
-                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                <Bar dataKey="חיבור" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} />
-                                <Bar dataKey="חיסור" stackId="a" fill="#f59e0b" />
-                                <Bar dataKey="כפל" stackId="a" fill="#3b82f6" />
-                                <Bar dataKey="חילוק" stackId="a" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                                <Legend iconType="circle" />
+
+                                {/* Stack 1: Correct Answers (Cool Colors) */}
+                                <Bar dataKey="חיבור (נכון)" stackId="correct" fill="#10b981" />
+                                <Bar dataKey="חיסור (נכון)" stackId="correct" fill="#059669" />
+                                <Bar dataKey="כפל (נכון)" stackId="correct" fill="#3b82f6" />
+                                <Bar dataKey="חילוק (נכון)" stackId="correct" fill="#6366f1" />
+                                <Bar dataKey="אחוזים (נכון)" stackId="correct" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+
+                                {/* Stack 2: Mistakes (Warm/Red Colors) */}
+                                <Bar dataKey="חיבור (טעות)" stackId="mistake" fill="#fca5a5" />
+                                <Bar dataKey="חיסור (טעות)" stackId="mistake" fill="#f87171" />
+                                <Bar dataKey="כפל (טעות)" stackId="mistake" fill="#ef4444" />
+                                <Bar dataKey="חילוק (טעות)" stackId="mistake" fill="#dc2626" />
+                                <Bar dataKey="אחוזים (טעות)" stackId="mistake" fill="#b91c1c" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -189,84 +177,54 @@ export default function ParentDashboard() {
                 </div>
             </div>
 
-            {/* Second Row: Radar Chart & Stats Table */}
-            <div className="grid lg:grid-cols-3 gap-8 mb-12">
-
-                {/* Radar Chart (Individual Profile) */}
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col items-center justify-center min-h-[400px]">
-                    {selectedChild ? (
-                        <>
-                            <h3 className="text-xl font-bold text-slate-800 mb-2 w-full text-right">
-                                הפרופיל של {selectedChild.username}
-                            </h3>
-                            <div className="h-[300px] w-full" dir="ltr">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                                        <PolarGrid stroke="#e2e8f0" />
-                                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 'bold' }} />
-                                        <Radar name={selectedChild.username} dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.4} />
-                                        <Tooltip />
-                                    </RadarChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <div className="text-center text-sm text-slate-400 font-medium">
-                                חוזק יחסי לפי נושאים
-                            </div>
-                        </>
-                    ) : (
-                        <div className="text-slate-400 font-medium">בחר ילד כדי לראות פרופיל</div>
-                    )}
+            {/* Detailed Table */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col mb-12">
+                <div className="p-6 border-b border-slate-50">
+                    <h3 className="text-xl font-bold text-slate-800">📋 טבלת הישגים מפורטת</h3>
                 </div>
-
-                {/* Detailed Table */}
-                <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-slate-50">
-                        <h3 className="text-xl font-bold text-slate-800">📋 פירוט מלא</h3>
-                    </div>
-                    <div className="overflow-x-auto flex-1">
-                        <table className="w-full text-right">
-                            <thead className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                                <tr>
-                                    <th className="px-6 py-4">שם</th>
-                                    <th className="px-6 py-4">גיל</th>
-                                    <th className="px-6 py-4 text-green-600">חיבור (טעויות)</th>
-                                    <th className="px-6 py-4 text-amber-600">חיסור (טעויות)</th>
-                                    <th className="px-6 py-4 text-blue-600">כפל (טעויות)</th>
-                                    <th className="px-6 py-4 text-purple-600">חילוק (טעויות)</th>
-                                    <th className="px-6 py-4 text-rose-600">סה"כ נקודות</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {children.map((child) => {
-                                    const total = (child.addition || 0) + (child.subtraction || 0) + (child.multiplication || 0) + (child.division || 0) + (child.percent || 0);
-                                    return (
-                                        <tr key={child._id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4 font-bold text-slate-800">{child.username}</td>
-                                            <td className="px-6 py-4 text-slate-500">{child.age}</td>
-                                            <td className="px-6 py-4 font-medium">
-                                                {child.addition || 0} <span className="text-rose-400 text-xs">({child.additionMistakes || 0})</span>
-                                            </td>
-                                            <td className="px-6 py-4 font-medium">
-                                                {child.subtraction || 0} <span className="text-rose-400 text-xs">({child.subtractionMistakes || 0})</span>
-                                            </td>
-                                            <td className="px-6 py-4 font-medium">
-                                                {child.multiplication || 0} <span className="text-rose-400 text-xs">({child.multiplicationMistakes || 0})</span>
-                                            </td>
-                                            <td className="px-6 py-4 font-medium">
-                                                {child.division || 0} <span className="text-rose-400 text-xs">({child.divisionMistakes || 0})</span>
-                                            </td>
-                                            <td className="px-6 py-4 font-black text-slate-800">{total}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                        {children.length === 0 && (
-                            <div className="p-10 text-center text-slate-400">
-                                עדיין אין נתונים להצגה
-                            </div>
-                        )}
-                    </div>
+                <div className="overflow-x-auto flex-1">
+                    <table className="w-full text-right">
+                        <thead className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            <tr>
+                                <th className="px-6 py-4">שם</th>
+                                <th className="px-6 py-4">גיל</th>
+                                <th className="px-6 py-4 text-green-600">חיבור (טעויות)</th>
+                                <th className="px-6 py-4 text-amber-600">חיסור (טעויות)</th>
+                                <th className="px-6 py-4 text-blue-600">כפל (טעויות)</th>
+                                <th className="px-6 py-4 text-purple-600">חילוק (טעויות)</th>
+                                <th className="px-6 py-4 text-rose-600">סה"כ נקודות</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {children.map((child) => {
+                                const total = (child.addition || 0) + (child.subtraction || 0) + (child.multiplication || 0) + (child.division || 0) + (child.percent || 0);
+                                return (
+                                    <tr key={child._id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-6 py-4 font-bold text-slate-800">{child.username}</td>
+                                        <td className="px-6 py-4 text-slate-500">{child.age}</td>
+                                        <td className="px-6 py-4 font-medium">
+                                            {child.addition || 0} <span className="text-rose-400 text-xs">({child.additionMistakes || 0})</span>
+                                        </td>
+                                        <td className="px-6 py-4 font-medium">
+                                            {child.subtraction || 0} <span className="text-rose-400 text-xs">({child.subtractionMistakes || 0})</span>
+                                        </td>
+                                        <td className="px-6 py-4 font-medium">
+                                            {child.multiplication || 0} <span className="text-rose-400 text-xs">({child.multiplicationMistakes || 0})</span>
+                                        </td>
+                                        <td className="px-6 py-4 font-medium">
+                                            {child.division || 0} <span className="text-rose-400 text-xs">({child.divisionMistakes || 0})</span>
+                                        </td>
+                                        <td className="px-6 py-4 font-black text-slate-800">{total}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    {children.length === 0 && (
+                        <div className="p-10 text-center text-slate-400">
+                            עדיין אין נתונים להצגה
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
