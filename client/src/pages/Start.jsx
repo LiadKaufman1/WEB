@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MathBot from "../components/MathBot";
-import React, { useEffect, useMemo, useState } from "react";
-import MathBot from "../components/MathBot";
+
 import { userService } from "../services/user.service";
 import { shopService } from "../services/shop.service";
 
