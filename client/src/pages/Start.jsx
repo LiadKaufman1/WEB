@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MathBot from "../components/MathBot";
-import API_URL from "../config";
-
-const API = API_URL;
+import React, { useEffect, useMemo, useState } from "react";
+import MathBot from "../components/MathBot";
+import { userService } from "../services/user.service";
+import { shopService } from "../services/shop.service";
 
 const SILVER = 30;
 const GOLD = 60;
@@ -47,7 +48,6 @@ export default function Stats() {
   const [buying, setBuying] = useState(null);
 
   async function loadStats() {
-    console.log("Fetching stats from:", `${API}/user/stats`);
     setErr("");
     setLoading(true);
 
@@ -59,21 +59,9 @@ export default function Stats() {
     }
 
     try {
-      const res = await fetch(`${API}/user/stats`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
-      });
+      const data = await userService.getStats(username);
 
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        throw new Error(`Server Invalid JSON: ${text.slice(0, 100)}`);
-      }
-
-      if (!res.ok || !data.ok) {
+      if (!data.ok) {
         setErr(data.error || "שגיאה בטעינת הנתונים.");
         setLoading(false);
         return;
@@ -95,12 +83,8 @@ export default function Stats() {
     if (window.confirm(`האם אתה רוצה לקנות ${item.name} ב-${item.cost} נקודות?`)) {
       setBuying(item.id);
       try {
-        const res = await fetch(`${API}/shop/buy`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, itemCost: item.cost, itemName: item.id })
-        });
-        const data = await res.json();
+        const data = await shopService.buyItem(username, item.cost, item.id);
+
         if (data.ok) {
           alert(`תתחדש! קנית ${item.name}`);
           loadStats(); // Reload to update balance

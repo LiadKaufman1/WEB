@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import API_URL from '../config';
+import { userService } from '../services/user.service';
 
 export default function MathBot({ onScoreUpdate, username }) {
     const [messages, setMessages] = useState([]);
@@ -102,12 +102,7 @@ export default function MathBot({ onScoreUpdate, username }) {
         if (isCorrect) {
             // API Call
             try {
-                const res = await fetch(`${API_URL}/score/${topic}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, points: 5 })
-                });
-                const data = await res.json();
+                const data = await userService.updateScore(topic, username, 5);
 
                 if (data.ok) {
                     onScoreUpdate(); // Refresh stats

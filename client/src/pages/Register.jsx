@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API_URL from "../config";
+import { authService } from "../services/auth.service";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -23,15 +23,9 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, age: ageNum }),
-      });
+      const data = await authService.register(username, password, ageNum);
 
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         setMsg(data.error || "ההרשמה נכשלה. נסה שם משתמש אחר.");
         setLoading(false);
         return;

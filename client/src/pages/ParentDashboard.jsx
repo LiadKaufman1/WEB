@@ -1,5 +1,5 @@
 import { useState } from "react";
-import API_URL from "../config";
+import { adminService } from "../services/admin.service";
 
 export default function ParentDashboard() {
     const [password, setPassword] = useState("");
@@ -14,12 +14,7 @@ export default function ParentDashboard() {
         setLoading(true);
 
         try {
-            const res = await fetch(`${API_URL}/parents/data`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password }),
-            });
-            const data = await res.json();
+            const data = await adminService.getParentsData(password);
 
             if (data.ok) {
                 setUsers(data.users);

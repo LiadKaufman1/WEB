@@ -1,7 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import catWelcomeGif from "./assets/CatWelcome.gif";
-import API_URL from "./config";
+import { authService } from "./services/auth.service";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -40,15 +37,10 @@ export default function Login() {
     setMsg("מאמת פרטים...");
 
     try {
-      const res = await fetch(`${API_URL}/check-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+      // Use Service
+      const data = await authService.checkLogin(username, password);
 
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
+      if (data.error || (!data.ok && !data.reason)) {
         setMsg(data.error || "שגיאת שרת");
         return;
       }

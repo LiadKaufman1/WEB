@@ -2,10 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats.jsx";
 import useCatUncongrats from "./useCatUncongrats.jsx";
-import API_URL from "../config";
+import { userService } from "../services/user.service";
 
 const DIV_STATE_KEY = "division_practice_state_v2";
-const API_BASE = API_URL;
 
 const LEVELS = {
   beginners: { label: "קל (2–5)", minDivisor: 2, maxDivisor: 5, maxAnswer: 10, points: 1 },
@@ -124,11 +123,7 @@ export default function PracticeDivision() {
     const points = LEVELS[level]?.points || 1;
 
     try {
-      await fetch(`${API_BASE}/score/division`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, points }),
-      });
+      await userService.updateScore("division", username, points);
     } catch {
       // ignore
     }
@@ -186,8 +181,8 @@ export default function PracticeDivision() {
               key={lvlKey}
               onClick={() => changeLevel(lvlKey)}
               className={`py-2 rounded-xl text-sm font-bold transition-all ${level === lvlKey
-                  ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                 }`}
             >
               {lvlKey === "beginners" ? "קל 😺" : lvlKey === "advanced" ? "בינוני 🐾" : "קשה 🐯"}

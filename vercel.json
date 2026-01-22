@@ -1,17 +1,12 @@
 {
-    "version": 2,
-    "rewrites": [
+    "routes": [
         {
-            "source": "/api/get_parents",
-            "destination": "/api/get_parents.js"
+            "handle": "filesystem"
         },
         {
-            "source": "/api/(.*)",
-            "destination": "/api/index.js"
-        },
-        {
-            "source": "/((?!api/.*).*)",
-            "destination": "/client/dist/index.html"
+            "src": "/(.*)",
+            "dest": "/index.html",
+            "status": 200
         }
     ]
 }
