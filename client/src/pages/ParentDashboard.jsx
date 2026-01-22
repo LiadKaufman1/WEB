@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { parentService } from "../services/parent.service";
 import { useNavigate } from "react-router-dom";
 import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
 const COLORS = ['#2563eb', '#db2777', '#16a34a', '#8b5cf6', '#ea580c', '#0891b2', '#ca8a04', '#dc2626'];
@@ -63,8 +63,9 @@ export default function ParentDashboard() {
         }
     }
 
-    // --- Data Preparation for Line Chart (Pivoted by Subject) ---
-    // We want X-Axis = Subjects, Lines = Children
+    // --- Data Preparation for Grouped Bar Chart (Pivoted by Subject) ---
+    // X-Axis = Subjects
+    // Bars = Children (Grouped)
     const subjects = [
         { key: 'addition', label: 'חיבור' },
         { key: 'subtraction', label: 'חיסור' },
@@ -76,25 +77,25 @@ export default function ParentDashboard() {
     const chartData = subjects.map(subj => {
         const entry = { name: subj.label };
         children.forEach(child => {
-            // Store simple score for the line
+            // Store score
             entry[child.username] = child[subj.key] || 0;
-            // Store mistake count for tooltip custom rendering (optional)
+            // Store mistakes
             entry[`${child.username}_mistakes`] = child[`${subj.key}Mistakes`] || 0;
         });
         return entry;
     });
 
-    // Custom Tooltip to show score AND mistakes
+    // Custom Tooltip
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-white p-4 border border-slate-100 shadow-xl rounded-xl text-right" dir="rtl">
                     <p className="font-bold text-slate-800 mb-2">{label}</p>
                     {payload.map((entry, index) => {
-                        const childName = entry.name;
+                        const childName = entry.dataKey;
                         const mistakes = entry.payload[`${childName}_mistakes`];
                         return (
-                            <p key={index} style={{ color: entry.color }} className="text-sm font-semibold">
+                            <p key={index} style={{ color: entry.fill }} className="text-sm font-semibold">
                                 {childName}: {entry.value} נק'
                                 <span className="text-slate-400 text-xs mr-2">(טעויות: {mistakes})</span>
                             </p>
@@ -123,16 +124,16 @@ export default function ParentDashboard() {
             {/* Top Section: Graphs & Create Form */}
             <div className="grid lg:grid-cols-3 gap-8 mb-12 animate-slide-in">
 
-                {/* Left: Line Chart (Progress by Subject) */}
+                {/* Left: Grouped Bar Chart */}
                 <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                     <h3 className="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
-                        <span>📈</span> התקדמות לפי נושאים
+                        <span>�</span> השוואת הישגים לפי נושא
                     </h3>
-                    <p className="text-sm text-slate-400 mb-6">כל קו מייצג ילד אחר</p>
+                    <p className="text-sm text-slate-400 mb-6">העמודות מראות את הניקוד לכל ילד בכל נושא</p>
 
                     <div className="h-[400px] w-full" dir="ltr">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartData}>
+                            <BarChart data={chartData} barGap={8}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                 <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 13, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                                 <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
@@ -140,17 +141,15 @@ export default function ParentDashboard() {
                                 <Legend iconType="circle" />
 
                                 {children.map((child, index) => (
-                                    <Line
+                                    <Bar
                                         key={child._id}
-                                        type="monotone"
                                         dataKey={child.username}
-                                        stroke={COLORS[index % COLORS.length]}
-                                        strokeWidth={4}
-                                        dot={{ r: 6, strokeWidth: 2, fill: '#fff' }}
-                                        activeDot={{ r: 8 }}
+                                        fill={COLORS[index % COLORS.length]}
+                                        radius={[4, 4, 0, 0]}
+                                        maxBarSize={50}
                                     />
                                 ))}
-                            </LineChart>
+                            </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
