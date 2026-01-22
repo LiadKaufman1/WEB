@@ -16,8 +16,8 @@ export default function Register() {
     setLoading(true);
 
     const ageNum = parseInt(age);
-    if (isNaN(ageNum) || ageNum < 4 || ageNum > 16) {
-      setMsg("הגיל חייב להיות בין 4 ל-16");
+    if (isNaN(ageNum) || ageNum < 4 || ageNum > 120) {
+      setMsg("הגיל חייב להיות בין 4 ל-120");
       setLoading(false);
       return;
     }
