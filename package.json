@@ -10,12 +10,7 @@
         "client": "cd client && npm run dev",
         "dev": "concurrently \"npm run server\" \"npm run client\""
     },
-    "dependencies": {
-        "cors": "^2.8.6",
-        "dotenv": "^17.2.3",
-        "express": "^5.2.1",
-        "mongoose": "^9.1.5"
-    },
+    "dependencies": {},
     "engines": {
         "node": "18.x"
     },

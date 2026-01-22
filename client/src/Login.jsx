@@ -1,4 +1,7 @@
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { authService } from "./services/auth.service";
+import catWelcomeGif from "./assets/CatWelcome.gif";
 
 export default function Login() {
   const navigate = useNavigate();
