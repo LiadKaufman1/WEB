@@ -2,8 +2,8 @@ import apiClient from "./apiClient";
 
 export const parentService = {
     createChild: async (parentId, childData) => {
-        // We send parentId in header as implemented in backend
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/child`, {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+        const res = await fetch(`${baseUrl}/child`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -15,7 +15,8 @@ export const parentService = {
     },
 
     getChildren: async (parentId) => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/children`, {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+        const res = await fetch(`${baseUrl}/children`, {
             method: 'GET',
             headers: {
                 'x-user-id': parentId

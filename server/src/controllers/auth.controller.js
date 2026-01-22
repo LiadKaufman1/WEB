@@ -8,7 +8,7 @@ export const register = async (req, res) => {
         }
         const ageNum = Number(age);
         if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 120) {
-            return res.status(400).json({ success: false, error: "גיל חייב להיות בין 1 ל-120" });
+            return res.status(400).json({ success: false, error: "גיל חייב להיות בין 1 ל-120 (מעודכן)" });
         }
         const exists = await User.findOne({ username });
         if (exists) {
