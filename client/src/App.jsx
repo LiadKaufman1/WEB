@@ -118,17 +118,22 @@ export default function App() {
                 <>
                   <Tab to="/login" icon="🔐">כניסה</Tab>
                   <Tab to="/register" icon="📝">הרשמה</Tab>
-                  <Tab to="/parents" icon="👨‍👩‍👧‍👦">הורים</Tab>
                   <Tab to="/about" icon="ℹ️">אודות</Tab>
                 </>
               ) : (
                 <>
-                  <Tab to="/start" icon="🏠">בית</Tab>
-                  <Tab to="/addition" icon="➕">חיבור</Tab>
-                  <Tab to="/subtraction" icon="➖">חיסור</Tab>
-                  <Tab to="/multiplication" icon="✖️">כפל</Tab>
-                  <Tab to="/division" icon="➗">חילוק</Tab>
-                  <Tab to="/percent" icon="％">אחוזים</Tab>
+                  {localStorage.getItem("role") === "parent" ? (
+                    <Tab to="/parents" icon="👨‍👩‍👧‍👦">הורים</Tab>
+                  ) : (
+                    <>
+                      <Tab to="/start" icon="🏠">בית</Tab>
+                      <Tab to="/addition" icon="➕">חיבור</Tab>
+                      <Tab to="/subtraction" icon="➖">חיסור</Tab>
+                      <Tab to="/multiplication" icon="✖️">כפל</Tab>
+                      <Tab to="/division" icon="➗">חילוק</Tab>
+                      <Tab to="/percent" icon="％">אחוזים</Tab>
+                    </>
+                  )}
                   <Tab to="/about" icon="ℹ️">אודות</Tab>
 
                   <button
@@ -166,7 +171,7 @@ export default function App() {
         <footer className="mt-12 text-center text-sm font-medium text-slate-400">
           © {new Date().getFullYear()} החשבון של מתי. כל הזכויות שמורות. 🐾
         </footer>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

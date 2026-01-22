@@ -1,111 +1,128 @@
-import { useState } from "react";
-import { adminService } from "../services/admin.service";
+import { useState, useEffect } from "react";
+import { parentService } from "../services/parent.service";
+import { useNavigate } from "react-router-dom";
 
 export default function ParentDashboard() {
-    const [password, setPassword] = useState("");
-    const [isUnlocked, setIsUnlocked] = useState(false);
-    const [error, setError] = useState("");
-    const [users, setUsers] = useState([]);
+    const navigate = useNavigate();
+    const [children, setChildren] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [createData, setCreateData] = useState({ username: "", password: "", age: "" });
+    const [msg, setMsg] = useState("");
 
-    async function handleLogin(e) {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
+    // Load children on mount
+    useEffect(() => {
+        const role = localStorage.getItem("role");
+        const userId = localStorage.getItem("userId");
 
+        if (role !== "parent" || !userId) {
+            navigate("/login"); // Redirect to login
+            return;
+        }
+
+        loadChildren(userId);
+    }, [navigate]);
+
+    async function loadChildren(parentId) {
         try {
-            const data = await adminService.getParentsData(password);
-
-            if (data.ok) {
-                setUsers(data.users);
-                setIsUnlocked(true);
-            } else {
-                console.error("Login failed:", data);
-                setError(data.error === "WRONG_PASSWORD" ? "סיסמה שגויה" : `שגיאת שרת: ${data.error} [${data.method || 'Unknown'}] ${data.version || ''}`);
+            const data = await parentService.getChildren(parentId);
+            if (data.success) {
+                setChildren(data.children);
             }
-        } catch (err) {
-            console.error("Fetch error:", err);
-            setError("שגיאה בחיבור לשרת (בדוק שהשרת רץ)");
-        } finally {
-            setLoading(false);
+        } catch (e) {
+            console.error("Failed to load children", e);
         }
     }
 
-    if (!isUnlocked) {
-        return (
-            <div className="mx-auto max-w-md mt-10 p-6 bg-white rounded-2xl shadow-lg border border-slate-100 text-center">
-                <h2 className="text-2xl font-bold text-slate-800 mb-6">מצב הורים 👨‍👩‍👧‍👦</h2>
-                <form onSubmit={handleLogin} className="flex flex-col gap-4">
-                    <input
-                        type="password"
-                        placeholder="הכנס סיסמה"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none text-center text-lg tracking-widest"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                    {error && <p className="text-rose-500 text-sm font-medium">{error}</p>}
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all active:scale-95 disabled:opacity-50"
-                    >
-                        {loading ? "בודק..." : "כניסה"}
-                    </button>
-                </form>
-            </div>
-        );
+    async function handleCreateChild(e) {
+        e.preventDefault();
+        setMsg("");
+
+        const parentId = localStorage.getItem("userId");
+        if (!parentId) return;
+
+        try {
+            const res = await parentService.createChild(parentId, createData);
+            if (res.success) {
+                setMsg("ילד נוסף בהצלחה! 🎉");
+                setCreateData({ username: "", password: "", age: "" });
+                loadChildren(parentId); // Refresh list
+            } else {
+                setMsg(res.error || "שגיאה ביצירת המשתמש");
+            }
+        } catch (e) {
+            setMsg("שגיאת תקשורת");
+        }
     }
 
     return (
         <div className="mx-auto max-w-5xl p-6">
             <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-black text-slate-800">לוח בקרה להורים 📊</h1>
-                <button
-                    onClick={() => setIsUnlocked(false)}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-bold transition-colors"
-                >
-                    יציאה
-                </button>
+                <h1 className="text-3xl font-black text-slate-800">הילדים שלי 👨‍👩‍👧‍👦</h1>
+                <div className="text-sm text-slate-500 font-bold">
+                    מחובר כהורה: {localStorage.getItem("username")}
+                </div>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-right">
-                        <thead className="bg-slate-50 text-slate-500 text-sm font-bold uppercase">
-                            <tr>
-                                <th className="px-6 py-4">שם משתמש</th>
-                                <th className="px-6 py-4">גיל</th>
-                                <th className="px-6 py-4">חיבור</th>
-                                <th className="px-6 py-4">חיסור</th>
-                                <th className="px-6 py-4">כפל</th>
-                                <th className="px-6 py-4">חילוק</th>
-                                <th className="px-6 py-4">אחוזים</th>
-                                <th className="px-6 py-4">מלאי</th>
-                                <th className="px-6 py-4">נקודות שבוזבזו</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {users.map((user) => (
-                                <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 py-4 font-bold text-slate-700">{user.username}</td>
-                                    <td className="px-6 py-4 text-slate-600">{user.age}</td>
-                                    <td className="px-6 py-4 text-green-600 font-medium">{user.addition || 0}</td>
-                                    <td className="px-6 py-4 text-amber-600 font-medium">{user.subtraction || 0}</td>
-                                    <td className="px-6 py-4 text-blue-600 font-medium">{user.multiplication || 0}</td>
-                                    <td className="px-6 py-4 text-purple-600 font-medium">{user.division || 0}</td>
-                                    <td className="px-6 py-4 text-rose-600 font-medium">{user.percent || 0}</td>
-                                    <td className="px-6 py-4 text-slate-500 text-sm">
-                                        {user.inventory?.length > 0 ? user.inventory.join(", ") : "-"}
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-400">{user.spentPoints || 0}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    {users.length === 0 && (
-                        <div className="p-12 text-center text-slate-400">
-                            לא נמצאו משתמשים במערכת
+            <div className="grid md:grid-cols-3 gap-6">
+
+                {/* Create Child Form */}
+                <div className="md:col-span-1">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <h3 className="text-xl font-bold text-slate-800 mb-4">הוסף ילד חדש 👶</h3>
+                        <form onSubmit={handleCreateChild} className="space-y-3">
+                            <input
+                                className="w-full p-3 rounded-xl border bg-slate-50"
+                                placeholder="שם משתמש לילד"
+                                value={createData.username}
+                                onChange={e => setCreateData({ ...createData, username: e.target.value })}
+                                required
+                            />
+                            <input
+                                className="w-full p-3 rounded-xl border bg-slate-50"
+                                placeholder="סיסמה לילד"
+                                value={createData.password}
+                                onChange={e => setCreateData({ ...createData, password: e.target.value })}
+                                required
+                            />
+                            <input
+                                className="w-full p-3 rounded-xl border bg-slate-50"
+                                placeholder="גיל"
+                                type="number"
+                                value={createData.age}
+                                onChange={e => setCreateData({ ...createData, age: e.target.value })}
+                                required
+                            />
+                            <button className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">
+                                צור משתמש
+                            </button>
+                            {msg && <div className="text-center text-sm font-bold text-blue-600">{msg}</div>}
+                        </form>
+                    </div>
+                </div>
+
+                {/* Children List */}
+                <div className="md:col-span-2 space-y-4">
+                    {children.length === 0 ? (
+                        <div className="text-center p-10 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            עדיין לא הוספת ילדים.
                         </div>
+                    ) : (
+                        children.map(child => (
+                            <div key={child._id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center">
+                                <div>
+                                    <div className="font-bold text-lg text-slate-800">{child.username}</div>
+                                    <div className="text-xs text-slate-500">גיל: {child.age} | סיסמה: {child.password}</div>
+                                </div>
+                                <div className="flex gap-4 text-center">
+                                    <div>
+                                        <div className="text-xs text-slate-400 font-bold">נקודות</div>
+                                        <div className="font-black text-blue-600">
+                                            {(child.addition || 0) + (child.subtraction || 0) + (child.multiplication || 0) + (child.division || 0) + (child.percent || 0)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
                     )}
                 </div>
             </div>

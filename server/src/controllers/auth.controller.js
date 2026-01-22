@@ -14,7 +14,7 @@ export const register = async (req, res) => {
         if (exists) {
             return res.status(409).json({ success: false, error: "שם משתמש כבר קיים" });
         }
-        const user = await User.create({ username, password, age: ageNum });
+        const user = await User.create({ username, password, age: ageNum, role: 'parent' });
         return res.json({ success: true, id: user._id });
     } catch (err) {
         return res.status(400).json({ success: false, error: err.message });
@@ -27,10 +27,10 @@ export const checkLogin = async (req, res) => {
         if (!username || !password) {
             return res.status(400).json({ error: "חסר שם משתמש או סיסמה" });
         }
-        const user = await User.findOne({ username }).select("password").lean();
+        const user = await User.findOne({ username }).select("password role").lean();
         if (!user) return res.json({ ok: false, reason: "NO_USER" });
         if (user.password !== password) return res.json({ ok: false, reason: "BAD_PASS" });
-        return res.json({ ok: true });
+        return res.json({ ok: true, role: user.role || 'child', id: user._id });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }

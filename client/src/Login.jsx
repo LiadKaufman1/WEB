@@ -17,7 +17,9 @@ export default function Login() {
   useEffect(() => {
     if (showGif) return;
     if (localStorage.getItem("isLoggedIn") === "1") {
-      navigate("/start", { replace: true });
+      const role = localStorage.getItem("role");
+      if (role === "parent") navigate("/parents", { replace: true });
+      else navigate("/start", { replace: true });
     }
   }, [navigate, showGif]);
 
@@ -52,11 +54,20 @@ export default function Login() {
         setMsg("התחברות הצליחה! ✅");
         setShowGif(true);
 
+        const role = data.role || 'child';
+
         timerRef.current = setTimeout(() => {
           localStorage.setItem("isLoggedIn", "1");
           localStorage.setItem("username", username);
+          localStorage.setItem("role", role);
+          localStorage.setItem("userId", data.id);
           window.dispatchEvent(new Event("auth-changed"));
-          navigate("/start", { replace: true });
+
+          if (role === 'parent') {
+            navigate("/parents", { replace: true });
+          } else {
+            navigate("/start", { replace: true });
+          }
         }, 1500); // 1.5s delay to enjoy the gif
         return;
       }

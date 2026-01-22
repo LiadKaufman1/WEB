@@ -44,8 +44,8 @@ export default function Register() {
   return (
     <div className="mx-auto max-w-md mt-10">
       <div className="card p-8">
-        <h2 className="text-3xl font-black text-center text-slate-900 mb-2">הצטרף לכיף! 📝</h2>
-        <p className="text-center text-slate-500 mb-8 font-medium">צור חשבון חדש כדי לאסוף מדליות</p>
+        <h2 className="text-3xl font-black text-center text-slate-900 mb-2">הרשמה להורים 📝</h2>
+        <p className="text-center text-slate-500 mb-8 font-medium">צור חשבון הורה ותוכל לנהל את הילדים</p>
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
@@ -79,10 +79,10 @@ export default function Register() {
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all text-right"
               value={age}
               onChange={(e) => setAge(e.target.value)}
-              placeholder="בן/בת כמה את/ה? (4-16)"
+              placeholder="גיל ההורה"
               type="number"
               min="4"
-              max="16"
+              max="120"
               required
               dir="auto"
             />

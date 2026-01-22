@@ -4,6 +4,8 @@ const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     age: { type: Number, required: true },
+    role: { type: String, enum: ['parent', 'child'], default: 'child' },
+    parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
     // Stats
     addition: { type: Number, default: 0 },
