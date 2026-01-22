@@ -4,18 +4,13 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "postinstall": "cd client && npm install",
+        "postinstall": "concurrently \"cd client && npm install\" \"cd server && npm install\"",
         "build": "cd client && npm run build",
-        "server": "node api/index.js",
+        "server": "cd server && npm start",
         "client": "cd client && npm run dev",
         "dev": "concurrently \"npm run server\" \"npm run client\""
     },
-    "dependencies": {
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.7",
-        "express": "^4.19.2",
-        "mongoose": "^8.5.1"
-    },
+    "dependencies": {},
     "engines": {
         "node": "18.x"
     },

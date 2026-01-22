@@ -1,23 +1,20 @@
 import mongoose from "mongoose";
+import User from "../src/models/User.js";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Connection string from your project
-const MONGO_URI = "mongodb+srv://mongoUser:mati1@cluster0.wxwcukg.mongodb.net/MorDB?retryWrites=true&w=majority";
+// Load env from server root
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 
-const UserSchema = new mongoose.Schema({
-    username: String,
-    addition: Number,
-    subtraction: Number,
-    multiplication: Number,
-    division: Number,
-    percent: Number,
-    spentPoints: Number,
-    inventory: [String]
-});
-
-const User = mongoose.model("User", UserSchema);
+const MONGO_URI = process.env.MONGO_URI;
 
 async function showUsers() {
     try {
+        if (!MONGO_URI) {
+            throw new Error("MONGO_URI not found in environment");
+        }
         await mongoose.connect(MONGO_URI, { dbName: 'MathGameDB' });
         console.log("✅ מחובר למסד הנתונים!\n");
 
