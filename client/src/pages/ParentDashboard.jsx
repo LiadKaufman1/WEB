@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { parentService } from "../services/parent.service";
 import { useNavigate } from "react-router-dom";
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+
+const COLORS = ['#2563eb', '#db2777', '#16a34a', '#8b5cf6', '#ea580c', '#0891b2', '#ca8a04', '#dc2626'];
 
 export default function ParentDashboard() {
     const navigate = useNavigate();
@@ -61,23 +63,48 @@ export default function ParentDashboard() {
         }
     }
 
-    // --- Data Preparation for Graphs ---
-    const comparisonData = children.map(child => ({
-        name: child.username,
-        // Correct Answers (Score)
-        "חיבור (נכון)": child.addition || 0,
-        "חיסור (נכון)": child.subtraction || 0,
-        "כפל (נכון)": child.multiplication || 0,
-        "חילוק (נכון)": child.division || 0,
-        "אחוזים (נכון)": child.percent || 0,
+    // --- Data Preparation for Line Chart (Pivoted by Subject) ---
+    // We want X-Axis = Subjects, Lines = Children
+    const subjects = [
+        { key: 'addition', label: 'חיבור' },
+        { key: 'subtraction', label: 'חיסור' },
+        { key: 'multiplication', label: 'כפל' },
+        { key: 'division', label: 'חילוק' },
+        { key: 'percent', label: 'אחוזים' }
+    ];
 
-        // Mistakes
-        "חיבור (טעות)": child.additionMistakes || 0,
-        "חיסור (טעות)": child.subtractionMistakes || 0,
-        "כפל (טעות)": child.multiplicationMistakes || 0,
-        "חילוק (טעות)": child.divisionMistakes || 0,
-        "אחוזים (טעות)": child.percentMistakes || 0,
-    }));
+    const chartData = subjects.map(subj => {
+        const entry = { name: subj.label };
+        children.forEach(child => {
+            // Store simple score for the line
+            entry[child.username] = child[subj.key] || 0;
+            // Store mistake count for tooltip custom rendering (optional)
+            entry[`${child.username}_mistakes`] = child[`${subj.key}Mistakes`] || 0;
+        });
+        return entry;
+    });
+
+    // Custom Tooltip to show score AND mistakes
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-white p-4 border border-slate-100 shadow-xl rounded-xl text-right" dir="rtl">
+                    <p className="font-bold text-slate-800 mb-2">{label}</p>
+                    {payload.map((entry, index) => {
+                        const childName = entry.name;
+                        const mistakes = entry.payload[`${childName}_mistakes`];
+                        return (
+                            <p key={index} style={{ color: entry.color }} className="text-sm font-semibold">
+                                {childName}: {entry.value} נק'
+                                <span className="text-slate-400 text-xs mr-2">(טעויות: {mistakes})</span>
+                            </p>
+                        );
+                    })}
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <div className="mx-auto max-w-7xl p-6 min-h-screen">
@@ -96,39 +123,34 @@ export default function ParentDashboard() {
             {/* Top Section: Graphs & Create Form */}
             <div className="grid lg:grid-cols-3 gap-8 mb-12 animate-slide-in">
 
-                {/* Left: Comparison Graph (Detailed Stacked) */}
+                {/* Left: Line Chart (Progress by Subject) */}
                 <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
                     <h3 className="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
-                        <span>🏆</span> ביצועים מול טעויות
+                        <span>📈</span> התקדמות לפי נושאים
                     </h3>
-                    <p className="text-sm text-slate-400 mb-6">עמודה ימנית: הצלחות | עמודה שמאלית: טעויות</p>
+                    <p className="text-sm text-slate-400 mb-6">כל קו מייצג ילד אחר</p>
 
                     <div className="h-[400px] w-full" dir="ltr">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={comparisonData} barGap={4}>
+                            <LineChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                 <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 13, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                                 <YAxis tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    cursor={{ fill: '#f8fafc', opacity: 0.5 }}
-                                />
+                                <Tooltip content={<CustomTooltip />} />
                                 <Legend iconType="circle" />
 
-                                {/* Stack 1: Correct Answers (Cool Colors) */}
-                                <Bar dataKey="חיבור (נכון)" stackId="correct" fill="#10b981" />
-                                <Bar dataKey="חיסור (נכון)" stackId="correct" fill="#059669" />
-                                <Bar dataKey="כפל (נכון)" stackId="correct" fill="#3b82f6" />
-                                <Bar dataKey="חילוק (נכון)" stackId="correct" fill="#6366f1" />
-                                <Bar dataKey="אחוזים (נכון)" stackId="correct" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-
-                                {/* Stack 2: Mistakes (Warm/Red Colors) */}
-                                <Bar dataKey="חיבור (טעות)" stackId="mistake" fill="#fca5a5" />
-                                <Bar dataKey="חיסור (טעות)" stackId="mistake" fill="#f87171" />
-                                <Bar dataKey="כפל (טעות)" stackId="mistake" fill="#ef4444" />
-                                <Bar dataKey="חילוק (טעות)" stackId="mistake" fill="#dc2626" />
-                                <Bar dataKey="אחוזים (טעות)" stackId="mistake" fill="#b91c1c" radius={[4, 4, 0, 0]} />
-                            </BarChart>
+                                {children.map((child, index) => (
+                                    <Line
+                                        key={child._id}
+                                        type="monotone"
+                                        dataKey={child.username}
+                                        stroke={COLORS[index % COLORS.length]}
+                                        strokeWidth={4}
+                                        dot={{ r: 6, strokeWidth: 2, fill: '#fff' }}
+                                        activeDot={{ r: 8 }}
+                                    />
+                                ))}
+                            </LineChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
