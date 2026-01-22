@@ -7,8 +7,8 @@ export const register = async (req, res) => {
             return res.status(400).json({ success: false, error: "חסר שם משתמש / סיסמה / גיל" });
         }
         const ageNum = Number(age);
-        if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 12) {
-            return res.status(400).json({ success: false, error: "גיל חייב להיות בין 1 ל-12" });
+        if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 120) {
+            return res.status(400).json({ success: false, error: "גיל חייב להיות בין 1 ל-120" });
         }
         const exists = await User.findOne({ username });
         if (exists) {
