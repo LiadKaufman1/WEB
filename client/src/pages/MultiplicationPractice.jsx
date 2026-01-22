@@ -1,0 +1,259 @@
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import useCatCongrats from "./useCatCongrats";
+import useCatUncongrats from "./useCatUncongrats";
+import { userService } from "../services/user.service";
+import MathBot from "../components/MathBot";
+
+const MULT_STATE_KEY = "multiplication_practice_state_v2";
+
+const LEVELS = {
+  beginners: { label: "קל (0–5)", min: 0, max: 5, points: 1 },
+  advanced: { label: "בינוני (0–10)", min: 0, max: 10, points: 3 },
+  champs: { label: "קשה (0–12)", min: 0, max: 12, points: 5 },
+};
+
+const LEVEL_TEXT = {
+  beginners: {
+    title: "רמה קלה 😺 (1 נק')",
+    body:
+      "מתי החתול מסביר שכפל זה חיבור שחוזר על עצמו.\n" +
+      "בוחרים מספר אחד.\n" +
+      "מחברים אותו שוב ושוב.\n" +
+      "דוגמה: 3 × 2 זה כמו 3 + 3.\n" +
+      "אפשר לצייר עיגולים או להשתמש באצבעות.\n" +
+      "טיפ של מתי: לאט וברור זה הכי טוב 😸",
+  },
+  advanced: {
+    title: "רמה בינונית 🐾 (3 נק')",
+    body:
+      "מתי החתול כבר יודע לחשב מהר יותר.\n" +
+      "משתמשים בלוח הכפל.\n" +
+      "זוכרים תרגילים מוכרים.\n" +
+      "אם קשה — מפרקים לחלקים.\n" +
+      "דוגמה: 6 × 7 → קודם 6 × 5 ואז 6 × 2.\n" +
+      "מחברים את התוצאות.\n" +
+      "טיפ של מתי: לפרק עושה את זה קל 🐾",
+  },
+  champs: {
+    title: "רמה קשה 🐯 (5 נק')",
+    body:
+      "זו רמה של אלופים אמיתיים.\n" +
+      "מתי החתול כבר מכיר את לוח הכפל טוב.\n" +
+      "אפשר להשתמש בטריקים חכמים.\n" +
+      "בודקים אם התשובה הגיונית.\n" +
+      "דוגמה: 9 × 12 → 10 × 12 ואז מורידים 12.\n" +
+      "מהיר וחכם.\n" +
+      "טיפ של מתי: לחשוב רגע חוסך טעויות 🧠",
+  },
+};
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function makeQuestion(levelKey) {
+  const { min, max } = LEVELS[levelKey] ?? LEVELS.beginners;
+  const a = randInt(min, max);
+  const b = randInt(min, max);
+  return { a, b, ans: a * b };
+}
+
+export default function PracticeMultiplication() {
+  const navigate = useNavigate();
+  const timerRef = useRef(null);
+
+  const { triggerCatFx, CatCongrats } = useCatCongrats(900);
+  const { triggerBadCatFx, CatUncongrats } = useCatUncongrats(900);
+
+  const [level, setLevel] = useState("beginners");
+  const [q, setQ] = useState(() => makeQuestion("beginners"));
+  const [input, setInput] = useState("");
+  const [msg, setMsg] = useState("");
+  const [noPointsThisQuestion, setNoPointsThisQuestion] = useState(false);
+
+  function savePracticeState(next = {}) {
+    sessionStorage.setItem(
+      MULT_STATE_KEY,
+      JSON.stringify({ level, q, input, msg, noPointsThisQuestion, ...next })
+    );
+  }
+
+  function clearPracticeState() {
+    sessionStorage.removeItem(MULT_STATE_KEY);
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const saved = sessionStorage.getItem(MULT_STATE_KEY);
+    if (saved) {
+      try {
+        const st = JSON.parse(saved);
+        if (st?.level && LEVELS[st.level]) setLevel(st.level);
+        if (st?.q) setQ(st.q);
+        if (typeof st?.input === "string") setInput(st.input);
+        if (typeof st?.msg === "string") setMsg(st.msg);
+        if (typeof st?.noPointsThisQuestion === "boolean")
+          setNoPointsThisQuestion(st.noPointsThisQuestion);
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
+  function changeLevel(newLevel) {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setLevel(newLevel);
+    goNextQuestion(newLevel);
+  }
+
+  function goNextQuestion(nextLevel = level) {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    clearPracticeState();
+    setMsg("");
+    setInput("");
+    setNoPointsThisQuestion(false);
+    setQ(makeQuestion(nextLevel));
+    savePracticeState({ level: nextLevel, q: makeQuestion(nextLevel), input: "", msg: "" });
+  }
+
+  async function incMultiplicationScoreIfAllowed() {
+    if (noPointsThisQuestion) return;
+    const username = localStorage.getItem("username");
+    if (!username) return;
+
+    const points = LEVELS[level]?.points || 1;
+
+    try {
+      await userService.updateScore("multiplication", username, points);
+    } catch {
+      // ignore
+    }
+  }
+
+  function checkAnswer() {
+    const val = Number(input);
+    if (input.trim() === "" || !Number.isFinite(val)) {
+      const m = "אנא הקלד מספר";
+      setMsg(m);
+      savePracticeState({ msg: m });
+      return;
+    }
+
+    if (val === q.ans) {
+      const earned = LEVELS[level]?.points || 1;
+      const m = noPointsThisQuestion
+        ? "✅ נכון! (ללא נקודות)"
+        : `✅ נכון! הרווחת ${earned} נקודות!`;
+      setMsg(m);
+      savePracticeState({ msg: m });
+
+      triggerCatFx();
+      incMultiplicationScoreIfAllowed();
+
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => goNextQuestion(level), 1500);
+      return;
+    }
+
+    triggerBadCatFx();
+    const m = "❌ טעות, נסה שוב";
+    setMsg(m);
+    savePracticeState({ msg: m });
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  return (
+    <div className="mx-auto max-w-lg mt-8 px-4">
+      <CatCongrats />
+      <CatUncongrats />
+
+      <div className="card p-6 md:p-8">
+        {/* MathBot Integration */}
+
+
+        <h2 className="text-3xl font-black text-slate-900 border-b pb-4 mb-4">תרגול כפל ✖️</h2>
+
+        {/* Level Selection */}
+        <div className="grid grid-cols-3 gap-2 mb-8 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+          {Object.keys(LEVELS).map((lvlKey) => (
+            <button
+              key={lvlKey}
+              onClick={() => changeLevel(lvlKey)}
+              className={`py-2 rounded-xl text-sm font-bold transition-all ${level === lvlKey
+                ? "bg-white text-blue-600 shadow-sm ring-2 ring-blue-100 scale-105"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                }`}
+            >
+              {lvlKey === "beginners" ? "קל 😺" : lvlKey === "advanced" ? "בינוני 🐾" : "קשה 🐯"}
+            </button>
+          ))}
+        </div>
+
+        {/* Question Display */}
+        <div className="text-center py-6" dir="ltr">
+          <div className="flex items-center justify-center gap-4 text-5xl md:text-6xl font-black text-slate-800 tracking-wider">
+            <span>{q.a}</span>
+            <span className="text-blue-500">×</span>
+            <span>{q.b}</span>
+            <span>=</span>
+          </div>
+        </div>
+
+        {/* MathBot Integration */}
+        <MathBot num1={q.a} num2={q.b} operator="*" />
+
+        {/* Answer Input */}
+        <div className="mb-6">
+          <input
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              savePracticeState({ input: e.target.value });
+            }}
+            onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
+            placeholder="?"
+            type="number"
+            className="w-full text-center text-3xl font-bold py-4 rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-300"
+            autoFocus
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={checkAnswer}
+            className="w-full py-4 text-xl font-bold rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            בדוק תשובה
+          </button>
+
+          <button
+            onClick={() => goNextQuestion(level)}
+            className="w-full py-3 font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+            title="דלג לתרגיל הבא"
+          >
+            דלג ➜
+          </button>
+        </div>
+
+        {/* Message */}
+        {msg && (
+          <div className={`mt-6 p-4 rounded-xl text-center font-bold text-lg animate-bounce-in ${msg.includes("נכון") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+            {msg}
+          </div>
+        )}
+
+
+      </div>
+    </div>
+  );
+}

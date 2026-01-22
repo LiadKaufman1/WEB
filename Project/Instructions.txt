@@ -1,0 +1,43 @@
+# Deployment Instructions (Grade 100 Model)
+
+## 1. Submission Overview
+This project is a Monorepo containing:
+- `client/`: React Frontend (SPA).
+- `server/`: Express Backend (Web Service).
+- `Project/`: Documentation & Presentation.
+
+## 2. Deployment Architecture (Split)
+To meet the academic requirements, we use a Split Deployment strategy:
+- **Backend**: Deployed on **Render** (as a Web Service) or Railway.
+- **Frontend**: Deployed on **Vercel** (as a Single Page App).
+
+## 3. Step-by-Step Deployment
+
+### Step A: Deploy Backend (Render)
+1. Login to Render.com and create a "New Web Service".
+2. Connect your GitHub repository.
+3. **Settings**:
+   - **Root Directory**: `server`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+4. **Environment Variables**:
+   - Add `MONGO_URI`: Your MongoDB connection string.
+   - Add `PORT`: `3000` (Optional, Render sets this automatically).
+5. **Result**: You will get a URL like `https://web-parent-server.onrender.com`. **Copy this URL.**
+
+### Step B: Deploy Frontend (Vercel)
+1. Login to Vercel and "Import Project".
+2. Select the repository.
+3. **Settings**:
+   - **Root Directory**: `client` (Click Edit if needed).
+   - **Framework Preset**: Vite.
+4. **Environment Variables**:
+   - **Key**: `VITE_API_URL`
+   - **Value**: The Render URL from Step A (e.g., `https://web-parent-server.onrender.com/api`).
+   - *Note: Do not add a trailing slash.*
+5. **Deploy**: Click "Deploy".
+
+## 4. Local Development
+- Run `npm install` in the root.
+- Run `npm run dev` to start both client and server locally.
+- Access via `http://localhost:5173`.
