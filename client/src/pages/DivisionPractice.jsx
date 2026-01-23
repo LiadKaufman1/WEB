@@ -251,15 +251,7 @@ export default function PracticeDivision() {
           </div>
         )}
 
-        {/* Level Info */}
-        <div className="mt-8 pt-6 border-t border-slate-100">
-          <h3 className="text-sm font-black text-slate-900 mb-2 flex items-center gap-2">
-            <span>ℹ️</span> {LEVEL_TEXT[level]?.title}
-          </h3>
-          <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-            {LEVEL_TEXT[level]?.body}
-          </p>
-        </div>
+
       </div>
     </div>
   );
