@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
 import { userService } from "../services/user.service";
+import MathHint from "../components/MathHint";
 
 const PERCENT_STATE_KEY = "percent_practice_state_v2";
 
@@ -234,6 +235,9 @@ export default function PracticePercent() {
             כמה זה <span className="text-blue-600">{q.p}%</span> מתוך <span className="text-slate-900">{q.base}</span>?
           </div>
         </div>
+
+        {/* MathHint Integration */}
+        <MathHint num1={q.p} num2={q.base} operator="%" />
 
         <div className="mb-6">
           <input

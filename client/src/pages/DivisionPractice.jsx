@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats.jsx";
 import useCatUncongrats from "./useCatUncongrats.jsx";
 import { userService } from "../services/user.service";
+import MathHint from "../components/MathHint";
 
 const DIV_STATE_KEY = "division_practice_state_v2";
 
@@ -205,6 +206,9 @@ export default function PracticeDivision() {
             <span>=</span>
           </div>
         </div>
+
+        {/* MathHint Integration */}
+        <MathHint num1={q.b * q.ans} num2={q.b} operator="/" />
 
         {/* Answer Input */}
         <div className="mb-6">

@@ -7,6 +7,7 @@ import userRoutes from './routes/user.routes.js';
 import shopRoutes from './routes/shop.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import parentRoutes from './routes/parent.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api', userRoutes);
 app.use('/api', shopRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', parentRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useCatCongrats from "./useCatCongrats";
 import useCatUncongrats from "./useCatUncongrats";
 import { userService } from "../services/user.service";
+import MathHint from "../components/MathHint";
 
 const ADD_STATE_KEY = "addition_practice_state_v2";
 
@@ -207,6 +208,9 @@ export default function PracticeAddition() {
             <span>=</span>
           </div>
         </div>
+
+        {/* MathHint Integration */}
+        <MathHint num1={q.a} num2={q.b} operator="+" />
 
         {/* Answer Input */}
         <div className="mb-6">
