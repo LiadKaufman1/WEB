@@ -12,16 +12,25 @@ import aiRoutes from './routes/ai.routes.js';
 const app = express();
 
 // Middleware
-app.use(cors()); // Allow all origins for now, or restrict to localhost:5173
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-// Mount Routes
-app.use('/api', authRoutes);
-app.use('/api', userRoutes);
-app.use('/api', shopRoutes);
-app.use('/api', adminRoutes);
-app.use('/api', parentRoutes);
-app.use('/api/ai', aiRoutes);
+// Vercel path normalization: strip /api if present so routes match cleanly
+app.use((req, res, next) => {
+    if (req.url.startsWith('/api')) {
+        req.url = req.url.replace('/api', '') || '/';
+    }
+    next();
+});
+
+// Mount Routes (at root, since we stripped /api)
+app.use('/', authRoutes);
+app.use('/', userRoutes);
+app.use('/', shopRoutes);
+app.use('/', adminRoutes);
+app.use('/', parentRoutes);
+app.use('/ai', aiRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {
