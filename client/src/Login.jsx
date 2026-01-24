@@ -75,7 +75,7 @@ export default function Login() {
       setMsg(data.reason === "NO_USER" ? "שם המשתמש אינו קיים ❌" : "סיסמה שגויה ❌");
     } catch (e) {
       console.error(e);
-      setMsg("השרת אינו זמין. אנא בדוק את החיבור לאינטרנט.");
+      setMsg(`שגיאה: השרת אינו זמין (${e.message})`);
     } finally {
       if (!showGif) setLoading(false);
     }
