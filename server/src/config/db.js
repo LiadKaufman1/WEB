@@ -16,6 +16,8 @@ export const connectDB = async () => {
         console.log("Connected to Mongo Atlas ✅");
     } catch (err) {
         console.error("Mongo connect error ❌:", err.message);
-        process.exit(1);
+        // Do not exit process in serverless environment, request will fail gracefully downstream or retry
+        // process.exit(1); 
+        throw err;
     }
 };

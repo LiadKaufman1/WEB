@@ -12,7 +12,17 @@ const apiClient = {
             body: JSON.stringify(body),
             ...options
         });
-        return res.json();
+
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`Server Error ${res.status}: ${text || res.statusText}`);
+        }
+
+        try {
+            return await res.json();
+        } catch (err) {
+            throw new Error("Response was not valid JSON (Empty or HTML?)");
+        }
     }
 };
 
